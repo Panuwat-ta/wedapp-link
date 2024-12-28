@@ -3,7 +3,7 @@ const path = require('path');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const app = express();
-const port = 8080;
+const port = 80;
 
 // MongoDB URI และ Client
 const uri = "mongodb+srv://panuwattakham2002:panuwat@cluster0.fqj8y.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
@@ -73,6 +73,49 @@ app.post('/add-link', async (req, res) => {
   } catch (error) {
     console.error("Error adding link:", error);
     res.status(500).send("Error adding link");
+  }
+});
+
+// Route สำหรับแก้ไขชื่อลิงก์
+app.put('/edit-link/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name } = req.body;
+
+  console.log('Received edit request:', { id, name }); // เพิ่ม log เพื่อดูข้อมูลที่ส่งมา
+
+  if (!name) {
+      console.log('Name is missing');
+      return res.status(400).send('ต้องระบุชื่อใหม่');
+  }
+
+  try {
+      const collection = client.db("Link").collection("link");
+      
+      // ตรวจสอบว่า id ถูกต้องหรือไม่
+      if (!ObjectId.isValid(id)) {
+          console.log('Invalid ObjectId:', id);
+          return res.status(400).send('ID ไม่ถูกต้อง');
+      }
+
+      const result = await collection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: { name: name } }
+      );
+
+      console.log('Update result:', result); // เพิ่ม log เพื่อดูผลลัพธ์
+
+      if (result.matchedCount === 0) {
+          return res.status(404).send('ไม่พบลิงก์ที่ต้องการแก้ไข');
+      }
+
+      if (result.modifiedCount === 0) {
+          return res.status(400).send('ไม่มีการเปลี่ยนแปลงข้อมูล');
+      }
+
+      res.status(200).send('แก้ไขชื่อลิงก์สำเร็จ');
+  } catch (error) {
+      console.error("Error updating link:", error);
+      res.status(500).send(`Error updating link: ${error.message}`);
   }
 });
 

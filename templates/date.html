@@ -13,7 +13,7 @@
         }
 
         nav {
-            background-color: #003366; /* สีพื้นหลังของเมนูเป็นสีน้ำเงินเข้ม */
+            background-color: #003366;
             overflow: hidden;
         }
 
@@ -27,20 +27,13 @@
         }
 
         nav a:hover {
-            background-color: #0055cc; /* เปลี่ยนสีเมื่อเอาเมาส์ไปที่ลิงก์เป็นสีน้ำเงินอ่อน */
+            background-color: #0055cc;
             color: white;
         }
 
         nav a.active {
-            background-color: #0044cc; /* สีพื้นหลังของลิงก์ที่เลือกเป็นสีน้ำเงิน */
+            background-color: #0044cc;
             color: white;
-        }
-        @media screen and (max-width: 600px) {
-            nav a {
-                float: none;
-                width: 100%;
-                text-align: left;
-            }
         }
 
         #contact-box {
@@ -74,7 +67,7 @@
             text-decoration: none;
             color: #333;
             font-size: 16px;
-            max-width: 80%;
+            max-width: 60%;
             word-wrap: break-word;
         }
 
@@ -82,8 +75,12 @@
             color: #007BFF;
         }
 
-        .delete-btn {
-            background: #ff4d4d;
+        .button-group {
+            display: flex;
+            gap: 5px;
+        }
+
+        .delete-btn, .edit-btn {
             border: none;
             color: white;
             padding: 8px 12px;
@@ -93,12 +90,20 @@
             transition: background-color 0.3s ease;
         }
 
+        .delete-btn {
+            background: #ff4d4d;
+        }
+
+        .edit-btn {
+            background: #4CAF50;
+        }
+
         .delete-btn:hover {
             background-color: #ff3333;
         }
 
-        form {
-            margin-top: 20px;
+        .edit-btn:hover {
+            background-color: #45a049;
         }
 
         input[type="text"] {
@@ -112,13 +117,9 @@
             transition: border-color 0.3s ease;
         }
 
-        input[type="text"]:focus {
-            border-color: #4CAF50; /* สีกรอบเมื่อใส่ข้อมูล */
-        }
-
         input[type="submit"] {
             padding: 12px;
-            background-color: #003366; /* สีพื้นหลังของปุ่มเพิ่มลิงก์เป็นสีน้ำเงินเข้ม */
+            background-color: #003366;
             color: white;
             border: none;
             width: 100%;
@@ -128,11 +129,13 @@
             transition: background-color 0.3s ease;
         }
 
-        input[type="submit"]:hover {
-            background-color: #4CAF50; /* สีพื้นหลังเมื่อ hover ปุ่ม */
-        }
-
-        @media (max-width: 600px) {
+        @media screen and (max-width: 600px) {
+            nav a {
+                float: none;
+                width: 100%;
+                text-align: left;
+            }
+            
             #contact-box {
                 width: 90%;
             }
@@ -148,7 +151,6 @@
 
     <section id="contact-box">
         <div id="link-container">
-            <!-- ลิงก์ที่บันทึกไว้จะถูกเพิ่มที่นี่ -->
         </div>
 
         <form id="add-link-form">
@@ -159,10 +161,9 @@
     </section>
 
     <script>
-        // ฟังก์ชั่นสำหรับโหลดลิงก์จาก MongoDB
         async function loadLinks() {
             const container = document.getElementById('link-container');
-            container.innerHTML = ''; 
+            container.innerHTML = '';
             try {
                 const response = await fetch('/data');
                 const links = await response.json();
@@ -173,15 +174,26 @@
 
                     const link = document.createElement('a');
                     link.href = url;
-                    link.textContent = `${date} - ${name}`; // รวมวันที่และชื่อในลิงก์เดียว
+                    link.textContent = `${date} - ${name}`;
+
+                    const buttonGroup = document.createElement('div');
+                    buttonGroup.className = 'button-group';
+
+                    const editBtn = document.createElement('button');
+                    editBtn.textContent = 'แก้ไข';
+                    editBtn.className = 'edit-btn';
+                    editBtn.addEventListener('click', () => editLink(_id, name));
 
                     const deleteBtn = document.createElement('button');
                     deleteBtn.textContent = 'ลบ';
                     deleteBtn.className = 'delete-btn';
                     deleteBtn.addEventListener('click', () => deleteLink(_id));
 
+                    buttonGroup.appendChild(editBtn);
+                    buttonGroup.appendChild(deleteBtn);
+                    
                     linkBox.appendChild(link);
-                    linkBox.appendChild(deleteBtn);
+                    linkBox.appendChild(buttonGroup);
                     container.appendChild(linkBox);
                 });
             } catch (error) {
@@ -189,33 +201,82 @@
             }
         }
 
-        // ฟังก์ชั่นสำหรับเพิ่มลิงก์ใหม่
-        async function saveLink(url, name) {
-            const currentDate = new Date().toLocaleString(); // วันที่และเวลาปัจจุบัน
+        // ฟังก์ชันสำหรับเพิ่มลิงก์ใหม่
+async function saveLink(url, name) {
+    
+    // สร้างวันที่และเวลาในรูปแบบ 24 ชั่วโมง
+    const now = new Date();
+    const currentDate = now.toLocaleDateString('th-TH', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    });
+    const currentTime = now.toLocaleTimeString('th-TH', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    });
+    const formattedDateTime = `${currentDate} ${currentTime}`;
+
+    try {
+        const response = await fetch('/add-link', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ url, name, date: formattedDateTime }),
+        });
+
+        if (response.ok) {
+            loadLinks();
+        } else {
+            alert('ไม่สามารถเพิ่มลิงก์ได้');
+        }
+    } catch (error) {
+        console.error('Error saving link:', error);
+        alert('เกิดข้อผิดพลาดในการบันทึกลิงก์');
+    }
+}
+
+        async function editLink(id, currentName) {
+    const password = prompt('กรุณาใส่รหัสผ่านเพื่อแก้ไขลิงก์:');
+    const correctPassword = 'panuwat';
+
+    if (password === correctPassword) {
+        const newName = prompt('กรุณาใส่ชื่อใหม่:', currentName);
+        
+        if (newName && newName !== currentName) {
             try {
-                const response = await fetch('/add-link', {
-                    method: 'POST',
+                const response = await fetch(`/edit-link/${id}`, {
+                    method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ url, name, date: currentDate }), // ส่งวันที่และเวลาไปพร้อมกับข้อมูล
+                    body: JSON.stringify({ name: newName }),
                 });
 
+                const responseData = await response.text();
+                
                 if (response.ok) {
-                    loadLinks(); 
+                    alert('แก้ไขชื่อลิงก์สำเร็จ');
+                    loadLinks();
                 } else {
-                    alert('ไม่สามารถเพิ่มลิงก์ได้');
+                    alert(`ไม่สามารถแก้ไขชื่อลิงก์ได้: ${responseData}`);
+                    console.error('Error response:', responseData);
                 }
             } catch (error) {
-                console.error('Error saving link:', error);
-                alert('เกิดข้อผิดพลาดในการบันทึกลิงก์');
+                console.error('Error editing link:', error);
+                alert(`เกิดข้อผิดพลาดในการแก้ไขชื่อลิงก์: ${error.message}`);
             }
         }
+    } else {
+        alert('รหัสผ่านไม่ถูกต้อง');
+    }
+}
 
-        // ฟังก์ชั่นสำหรับลบลิงก์
         async function deleteLink(id) {
             const password = prompt('กรุณาใส่รหัสผ่านเพื่อลบลิงก์:');
-            const correctPassword = 'panuwat'; 
+            const correctPassword = 'panuwat';
 
             if (password === correctPassword) {
                 try {
@@ -237,11 +298,10 @@
             }
         }
 
-        // เมื่อส่งแบบฟอร์มเพิ่มลิงก์
         document.getElementById('add-link-form').addEventListener('submit', function(event) {
             event.preventDefault();
             const url = document.getElementById('link-url').value;
-            const name = document.getElementById('link-name').value || url; 
+            const name = document.getElementById('link-name').value || url;
             if (url) {
                 saveLink(url, name);
                 document.getElementById('link-url').value = '';
@@ -249,7 +309,6 @@
             }
         });
 
-        // โหลดลิงก์ที่บันทึกไว้เมื่อเริ่มต้น
         loadLinks();
     </script>
 </body>
