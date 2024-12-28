@@ -144,9 +144,9 @@
 </head>
 <body>
     <nav>
-        <a href="./index.html" onclick="setActive(this)">หน้าแรก</a>
-        <a href="./date.html" class="active" onclick="setActive(this)">อัปเดต</a>
-        <a href="./profile.html" onclick="setActive(this)">โปรไฟล์</a>
+        <a href="./index.html" onclick="setActive(this)">Home</a>
+        <a href="./date.html" class="active" onclick="setActive(this)">Update</a>
+        <a href="./profile.html" onclick="setActive(this)">Profile</a>
     </nav>
 
     <section id="contact-box">
@@ -160,7 +160,7 @@
     </section>
 
     <script>
-        // ฟังก์ชันสำหรับตั้งค่าลิงก์ที่ใช้งาน
+        // Function to highlight active navigation link
         function setActive(element) {
             document.querySelectorAll('nav a').forEach(link => {
                 link.classList.remove('active');
@@ -168,7 +168,7 @@
             element.classList.add('active');
         }
 
-        // ฟังก์ชันโหลดลิงก์ทั้งหมดจากเซิร์ฟเวอร์
+        // Load all links from the server
         async function loadLinks() {
             const container = document.getElementById('link-container');
             container.innerHTML = '';
@@ -205,11 +205,11 @@
                     container.appendChild(linkBox);
                 });
             } catch (error) {
-                console.error('เกิดข้อผิดพลาดในการโหลดลิงก์:', error);
+                console.error('Error loading links:', error);
             }
         }
 
-        // ฟังก์ชันสำหรับบันทึกลิงก์ใหม่
+        // Save the new link
         async function saveLink(url, name) {
             const now = new Date();
             const currentDate = now.toLocaleDateString('th-TH', {
@@ -239,12 +239,12 @@
                     alert('ไม่สามารถเพิ่มลิงก์ได้');
                 }
             } catch (error) {
-                console.error('เกิดข้อผิดพลาดในการบันทึกลิงก์:', error);
+                console.error('Error saving link:', error);
                 alert('เกิดข้อผิดพลาดในการบันทึกลิงก์');
             }
         }
 
-        // ฟังก์ชันสำหรับแก้ไขลิงก์
+        // Edit an existing link
         async function editLink(id, currentName) {
             const password = prompt('กรุณาใส่รหัสผ่านเพื่อแก้ไขลิงก์:');
             const correctPassword = 'panuwat';
@@ -272,7 +272,7 @@
                             console.error('Error response:', responseData);
                         }
                     } catch (error) {
-                        console.error('เกิดข้อผิดพลาดในการแก้ไขลิงก์:', error);
+                        console.error('Error editing link:', error);
                         alert(`เกิดข้อผิดพลาดในการแก้ไขชื่อลิงก์: ${error.message}`);
                     }
                 }
@@ -281,7 +281,7 @@
             }
         }
 
-        // ฟังก์ชันสำหรับลบลิงก์
+        // Delete a link
         async function deleteLink(id) {
             const password = prompt('กรุณาใส่รหัสผ่านเพื่อลบลิงก์:');
             const correctPassword = 'panuwat';
@@ -298,7 +298,7 @@
                         alert('ไม่สามารถลบลิงก์ได้');
                     }
                 } catch (error) {
-                    console.error('เกิดข้อผิดพลาดในการลบลิงก์:', error);
+                    console.error('Error deleting link:', error);
                     alert('เกิดข้อผิดพลาดในการลบลิงก์');
                 }
             } else {
@@ -306,7 +306,7 @@
             }
         }
 
-        // ฟังก์ชันสำหรับการส่งฟอร์มเพื่อเพิ่มลิงก์ใหม่
+        // Handle the form submission for adding new links
         document.getElementById('add-link-form').addEventListener('submit', function(event) {
             event.preventDefault();
             const url = document.getElementById('link-url').value;
