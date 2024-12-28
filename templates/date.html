@@ -144,15 +144,13 @@
 </head>
 <body>
     <nav>
-        <a href="./index.html" onclick="setActive(this)">Home</a>
-        <a href="./date.html" class="active" onclick="setActive(this)">Update</a>
-        <a href="./profile.html" onclick="setActive(this)">Profile</a>
+        <a href="./index.html" onclick="setActive(this)">หน้าแรก</a>
+        <a href="./date.html" class="active" onclick="setActive(this)">อัปเดต</a>
+        <a href="./profile.html" onclick="setActive(this)">โปรไฟล์</a>
     </nav>
 
     <section id="contact-box">
-        <div id="link-container">
-            <!-- ลิงก์จะถูกเพิ่มที่นี่ด้วย JavaScript -->
-        </div>
+        <div id="link-container"></div>
 
         <form id="add-link-form">
             <input type="text" id="link-url" placeholder="ใส่ URL ที่นี่" required>
@@ -162,15 +160,21 @@
     </section>
 
     <script>
+        // ฟังก์ชันสำหรับตั้งค่าลิงก์ที่ใช้งาน
+        function setActive(element) {
+            document.querySelectorAll('nav a').forEach(link => {
+                link.classList.remove('active');
+            });
+            element.classList.add('active');
+        }
+
+        // ฟังก์ชันโหลดลิงก์ทั้งหมดจากเซิร์ฟเวอร์
         async function loadLinks() {
             const container = document.getElementById('link-container');
             container.innerHTML = '';
             try {
                 const response = await fetch('/data');
                 const links = await response.json();
-
-                // เรียงลำดับตามวันที่และเวลาจากใหม่ไปเก่า
-                links.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
                 links.forEach(({ _id, url, name, date }) => {
                     const linkBox = document.createElement('div');
@@ -179,7 +183,6 @@
                     const link = document.createElement('a');
                     link.href = url;
                     link.textContent = `${date} - ${name}`;
-                    link.target = "_blank"; // เปิดในแท็บใหม่
 
                     const buttonGroup = document.createElement('div');
                     buttonGroup.className = 'button-group';
@@ -187,7 +190,7 @@
                     const editBtn = document.createElement('button');
                     editBtn.textContent = 'แก้ไข';
                     editBtn.className = 'edit-btn';
-                    editBtn.addEventListener('click', () => editLink(_id, name, url));
+                    editBtn.addEventListener('click', () => editLink(_id, name));
 
                     const deleteBtn = document.createElement('button');
                     deleteBtn.textContent = 'ลบ';
@@ -202,20 +205,24 @@
                     container.appendChild(linkBox);
                 });
             } catch (error) {
-                console.error('Error loading links:', error);
+                console.error('เกิดข้อผิดพลาดในการโหลดลิงก์:', error);
             }
         }
 
+        // ฟังก์ชันสำหรับบันทึกลิงก์ใหม่
         async function saveLink(url, name) {
-            // จัดรูปแบบวันที่และเวลาแบบ 24 ชั่วโมง
             const now = new Date();
-            const year = now.getFullYear() + 543; // แปลงเป็น พ.ศ.
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            
-            const formattedDateTime = `${day}/${month}/${year} ${hours}:${minutes} น.`;
+            const currentDate = now.toLocaleDateString('th-TH', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+            });
+            const currentTime = now.toLocaleTimeString('th-TH', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+            const formattedDateTime = `${currentDate} ${currentTime}`;
 
             try {
                 const response = await fetch('/add-link', {
@@ -223,12 +230,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ 
-                        url, 
-                        name, 
-                        date: formattedDateTime,
-                        timestamp: now.getTime() // เก็บ timestamp สำหรับการเรียงลำดับ
-                    }),
+                    body: JSON.stringify({ url, name, date: formattedDateTime }),
                 });
 
                 if (response.ok) {
@@ -237,12 +239,13 @@
                     alert('ไม่สามารถเพิ่มลิงก์ได้');
                 }
             } catch (error) {
-                console.error('Error saving link:', error);
+                console.error('เกิดข้อผิดพลาดในการบันทึกลิงก์:', error);
                 alert('เกิดข้อผิดพลาดในการบันทึกลิงก์');
             }
         }
 
-        async function editLink(id, currentName, currentUrl) {
+        // ฟังก์ชันสำหรับแก้ไขลิงก์
+        async function editLink(id, currentName) {
             const password = prompt('กรุณาใส่รหัสผ่านเพื่อแก้ไขลิงก์:');
             const correctPassword = 'panuwat';
 
@@ -256,21 +259,21 @@
                             headers: {
                                 'Content-Type': 'application/json',
                             },
-                            body: JSON.stringify({ 
-                                name: newName,
-                                url: currentUrl
-                            }),
+                            body: JSON.stringify({ name: newName }),
                         });
 
+                        const responseData = await response.text();
+                        
                         if (response.ok) {
+                            alert('แก้ไขชื่อลิงก์สำเร็จ');
                             loadLinks();
                         } else {
-                            const errorText = await response.text();
-                            alert(`ไม่สามารถแก้ไขชื่อลิงก์ได้: ${errorText}`);
+                            alert(`ไม่สามารถแก้ไขชื่อลิงก์ได้: ${responseData}`);
+                            console.error('Error response:', responseData);
                         }
                     } catch (error) {
-                        console.error('Error editing link:', error);
-                        alert('เกิดข้อผิดพลาดในการแก้ไขชื่อลิงก์');
+                        console.error('เกิดข้อผิดพลาดในการแก้ไขลิงก์:', error);
+                        alert(`เกิดข้อผิดพลาดในการแก้ไขชื่อลิงก์: ${error.message}`);
                     }
                 }
             } else {
@@ -278,6 +281,7 @@
             }
         }
 
+        // ฟังก์ชันสำหรับลบลิงก์
         async function deleteLink(id) {
             const password = prompt('กรุณาใส่รหัสผ่านเพื่อลบลิงก์:');
             const correctPassword = 'panuwat';
@@ -294,7 +298,7 @@
                         alert('ไม่สามารถลบลิงก์ได้');
                     }
                 } catch (error) {
-                    console.error('Error deleting link:', error);
+                    console.error('เกิดข้อผิดพลาดในการลบลิงก์:', error);
                     alert('เกิดข้อผิดพลาดในการลบลิงก์');
                 }
             } else {
@@ -302,14 +306,17 @@
             }
         }
 
+        // ฟังก์ชันสำหรับการส่งฟอร์มเพื่อเพิ่มลิงก์ใหม่
         document.getElementById('add-link-form').addEventListener('submit', function(event) {
             event.preventDefault();
             const url = document.getElementById('link-url').value;
             const name = document.getElementById('link-name').value || url;
-            if (url) {
+            if (url && name) {
                 saveLink(url, name);
                 document.getElementById('link-url').value = '';
                 document.getElementById('link-name').value = '';
+            } else {
+                alert('กรุณากรอก URL และชื่อให้ครบ');
             }
         });
 
