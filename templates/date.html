@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fc;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav {
+            background-color: #003366; /* สีพื้นหลังของเมนูเป็นสีน้ำเงินเข้ม */
+            overflow: hidden;
+        }
+
+        nav a {
+            float: left;
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+        }
+
+        nav a:hover {
+            background-color: #0055cc; /* เปลี่ยนสีเมื่อเอาเมาส์ไปที่ลิงก์เป็นสีน้ำเงินอ่อน */
+            color: white;
+        }
+
+        nav a.active {
+            background-color: #0044cc; /* สีพื้นหลังของลิงก์ที่เลือกเป็นสีน้ำเงิน */
+            color: white;
+        }
+        @media screen and (max-width: 600px) {
+            nav a {
+                float: none;
+                width: 100%;
+                text-align: left;
+            }
+        }
+
+        #contact-box {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background-color: #fff;
+            padding: 30px;
+            width: 80%;
+            max-width: 600px;
+            margin: 30px auto;
+            text-align: center;
+        }
+
+        .link-box {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .link-box:hover {
+            background-color: #f0f8ff;
+        }
+
+        .link-box a {
+            text-decoration: none;
+            color: #333;
+            font-size: 16px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .link-box a:hover {
+            color: #007BFF;
+        }
+
+        .delete-btn {
+            background: #ff4d4d;
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            font-size: 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background-color: #ff3333;
+        }
+
+        form {
+            margin-top: 20px;
+        }
+
+        input[type="text"] {
+            padding: 12px;
+            margin: 10px 0;
+            width: calc(100% - 24px);
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: #4CAF50; /* สีกรอบเมื่อใส่ข้อมูล */
+        }
+
+        input[type="submit"] {
+            padding: 12px;
+            background-color: #003366; /* สีพื้นหลังของปุ่มเพิ่มลิงก์เป็นสีน้ำเงินเข้ม */
+            color: white;
+            border: none;
+            width: 100%;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #4CAF50; /* สีพื้นหลังเมื่อ hover ปุ่ม */
+        }
+
+        @media (max-width: 600px) {
+            #contact-box {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="./index.html" onclick="setActive(this)">Home</a>
+        <a href="./date.html" class="active" onclick="setActive(this)">Update</a>
+        <a href="./profile.html" onclick="setActive(this)">Profile</a>
+    </nav>
+
+    <section id="contact-box">
+        <div id="link-container">
+            <!-- ลิงก์ที่บันทึกไว้จะถูกเพิ่มที่นี่ -->
+        </div>
+
+        <form id="add-link-form">
+            <input type="text" id="link-url" placeholder="ใส่ URL ที่นี่" required>
+            <input type="text" id="link-name" placeholder="ใส่ชื่อของลิงก์ที่นี่" required>
+            <input type="submit" value="เพิ่มลิงก์">
+        </form>
+    </section>
+
+    <script>
+        // ฟังก์ชั่นสำหรับโหลดลิงก์จาก MongoDB
+        async function loadLinks() {
+            const container = document.getElementById('link-container');
+            container.innerHTML = ''; 
+            try {
+                const response = await fetch('/data');
+                const links = await response.json();
+
+                links.forEach(({ _id, url, name, date }) => {
+                    const linkBox = document.createElement('div');
+                    linkBox.className = 'link-box';
+
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.textContent = `${date} - ${name}`; // รวมวันที่และชื่อในลิงก์เดียว
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = 'ลบ';
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.addEventListener('click', () => deleteLink(_id));
+
+                    linkBox.appendChild(link);
+                    linkBox.appendChild(deleteBtn);
+                    container.appendChild(linkBox);
+                });
+            } catch (error) {
+                console.error('Error loading links:', error);
+            }
+        }
+
+        // ฟังก์ชั่นสำหรับเพิ่มลิงก์ใหม่
+        async function saveLink(url, name) {
+            const currentDate = new Date().toLocaleString(); // วันที่และเวลาปัจจุบัน
+            try {
+                const response = await fetch('/add-link', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url, name, date: currentDate }), // ส่งวันที่และเวลาไปพร้อมกับข้อมูล
+                });
+
+                if (response.ok) {
+                    loadLinks(); 
+                } else {
+                    alert('ไม่สามารถเพิ่มลิงก์ได้');
+                }
+            } catch (error) {
+                console.error('Error saving link:', error);
+                alert('เกิดข้อผิดพลาดในการบันทึกลิงก์');
+            }
+        }
+
+        // ฟังก์ชั่นสำหรับลบลิงก์
+        async function deleteLink(id) {
+            const password = prompt('กรุณาใส่รหัสผ่านเพื่อลบลิงก์:');
+            const correctPassword = 'panuwat'; 
+
+            if (password === correctPassword) {
+                try {
+                    const response = await fetch(`/delete-link/${id}`, {
+                        method: 'DELETE',
+                    });
+
+                    if (response.ok) {
+                        loadLinks();
+                    } else {
+                        alert('ไม่สามารถลบลิงก์ได้');
+                    }
+                } catch (error) {
+                    console.error('Error deleting link:', error);
+                    alert('เกิดข้อผิดพลาดในการลบลิงก์');
+                }
+            } else {
+                alert('รหัสผ่านไม่ถูกต้อง');
+            }
+        }
+
+        // เมื่อส่งแบบฟอร์มเพิ่มลิงก์
+        document.getElementById('add-link-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const url = document.getElementById('link-url').value;
+            const name = document.getElementById('link-name').value || url; 
+            if (url) {
+                saveLink(url, name);
+                document.getElementById('link-url').value = '';
+                document.getElementById('link-name').value = '';
+            }
+        });
+
+        // โหลดลิงก์ที่บันทึกไว้เมื่อเริ่มต้น
+        loadLinks();
+    </script>
+</body>
+</html>

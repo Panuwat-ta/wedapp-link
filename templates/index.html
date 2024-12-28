@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>panuwat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0; /* เปลี่ยนพื้นหลังให้มีสีอ่อน */
+        }
+
+        nav {
+            background-color: #003366; /* สีพื้นหลังของเมนูเป็นสีน้ำเงินเข้ม */
+            overflow: hidden;
+        }
+
+        nav a {
+            float: left;
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+        }
+
+        nav a:hover {
+            background-color: #0055cc; /* เปลี่ยนสีเมื่อเอาเมาส์ไปที่ลิงก์เป็นสีน้ำเงินอ่อน */
+            color: white;
+        }
+
+        nav a.active {
+            background-color: #0044cc; /* สีพื้นหลังของลิงก์ที่เลือกเป็นสีน้ำเงิน */
+            color: white;
+        }
+
+        @media screen and (max-width: 600px) {
+            nav a {
+                float: none;
+                width: 100%;
+                text-align: left;
+            }
+
+            table {
+                width: 100%;
+                display: block;
+                overflow-x: auto;
+            }
+
+            table, th, td {
+                width: 100%;
+                display: block;
+                box-sizing: border-box;
+            }
+
+            th, td {
+                text-align: right;
+            }
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #003366; /* สีพื้นหลังของ header เป็นสีน้ำเงิน */
+            color: white;
+        }
+
+        td button {
+            background-color: #003366; /* ปุ่ม "Open" เป็นสีน้ำเงิน */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        td button:hover {
+            background-color: #0055cc; /* เปลี่ยนสีเมื่อเอาเมาส์ไปที่ปุ่ม */
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/index.html" class="active" onclick="setActive(this)">Home</a>
+        <a href="./date.html" onclick="setActive(this)">Update</a>
+        <a href="./profile.html" onclick="setActive(this)">Profile</a>
+    </nav>
+
+    <h1>Data Link</h1>
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Link</th>
+                <th>Name</th>
+                <th>Open</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- ข้อมูลจะถูกเพิ่มที่นี่โดยฟังก์ชัน fetchData -->
+        </tbody>
+    </table>
+
+    <script>
+        function setActive(menuItem) {
+            const menuItems = document.querySelectorAll('nav a');
+            menuItems.forEach(item => item.classList.remove('active'));
+            menuItem.classList.add('active');
+        }
+
+        async function fetchData() {
+            try {
+                const response = await fetch('/data'); // ดึงข้อมูลจากเซิร์ฟเวอร์
+                const data = await response.json(); // แปลงข้อมูลเป็น JSON
+                const tableBody = document.querySelector('#dataTable tbody');
+                tableBody.innerHTML = ''; // ล้างข้อมูลเก่า
+
+                // เพิ่มข้อมูลในตาราง
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.date}</td> <!-- แสดงวันที่จากเซิร์ฟเวอร์ -->
+                        <td>${item.url}</td> <!-- แสดงลิงก์จากเซิร์ฟเวอร์ -->
+                        <td>${item.name}</td> <!-- แสดงชื่อจากเซิร์ฟเวอร์ -->
+                        <td><button onclick="window.open('${item.url}', '_blank')">Open</button></td> <!-- ปุ่มเปิดลิงก์ -->
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        // เรียกใช้งาน fetchData เมื่อโหลดหน้า
+        fetchData();
+    </script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0; /* เปลี่ยนพื้นหลังให้มีสีอ่อน */
+            text-align: center; /* Centers the body content */
+        }
+
+        nav {
+            background-color: #003366; /* สีพื้นหลังของเมนูเป็นสีน้ำเงินเข้ม */
+            overflow: hidden;
+        }
+
+        nav a {
+            float: left;
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+        }
+
+        nav a:hover {
+            background-color: #0055cc; /* เปลี่ยนสีเมื่อเอาเมาส์ไปที่ลิงก์เป็นสีน้ำเงินอ่อน */
+            color: white;
+        }
+
+        nav a.active {
+            background-color: #0044cc; /* สีพื้นหลังของลิงก์ที่เลือกเป็นสีน้ำเงิน */
+            color: white;
+        }
+
+        @media screen and (max-width: 600px) {
+            nav a {
+                float: none;
+                width: 100%;
+                text-align: left;
+            }
+        }
+
+        /* Apply styles directly to the image */
+        img {
+            width: 200px; 
+            height: 200px; 
+            border-radius: 50%; 
+            margin: 20px auto; 
+            display: block; 
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/index.html" onclick="setActive(this)">Home</a>
+        <a href="./date.html" onclick="setActive(this)">Update</a>
+        <a href="./profile.html" class="active" onclick="setActive(this)">Profile</a>
+    </nav>
+    <img src="b1.jpg" alt="b1">
+    <p>panuwat takham</p>
+</body>
+</html>
