@@ -3,7 +3,7 @@ const path = require('path');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const app = express();
-const port = 80;
+const port = 808;
 
 // MongoDB URI และ Client
 const uri = "mongodb+srv://panuwattakham2002:panuwat@cluster0.fqj8y.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
@@ -43,9 +43,6 @@ app.get('/profile.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'templates', 'profile.html'));
 });
 
-app.get('/index.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'templates', 'index.html'));
-});
 
 // Route สำหรับส่งข้อมูล MongoDB
 app.get('/data', async (req, res) => {
