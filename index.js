@@ -3,7 +3,7 @@ const path = require('path');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const app = express();
-const port = 808;
+const port = 80;
 
 // MongoDB URI และ Client
 const uri = "mongodb+srv://panuwattakham2002:panuwat@cluster0.fqj8y.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
