@@ -43,6 +43,9 @@ app.get('/profile.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'templates', 'profile.html'));
 });
 
+app.get('/index.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'templates', 'index.html'));
+});
 
 // Route สำหรับส่งข้อมูล MongoDB
 app.get('/data', async (req, res) => {
