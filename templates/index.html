@@ -13,8 +13,10 @@
         <a href="./date.html" onclick="setActive(this)">Update</a>
         <a href="./profile.html" onclick="setActive(this)">Profile</a>
     </nav>
-
+    <div class="data-link">
     <h1>Data Link</h1>
+    </div>
+    <input type="text" id="searchBox" placeholder="ค้นหา..." oninput="filterTable()">
     <table id="dataTable">
         <thead>
             <tr>
@@ -56,6 +58,24 @@
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
+        }
+
+
+        //ค้นหา
+        function filterTable() {
+            const query = document.getElementById('searchBox').value.toLowerCase(); // คำค้นหา
+            const rows = document.querySelectorAll('#dataTable tbody tr');
+            rows.forEach(row => {
+                const cells = row.getElementsByTagName('td');
+                const name = cells[2].textContent.toLowerCase(); // ค้นหาจากคอลัมน์ "ชื่อ"
+                
+                // ตรวจสอบว่าคำค้นหาตรงกับชื่อ
+                if (name.includes(query)) {
+                    row.style.display = ''; // แสดงแถว
+                } else {
+                    row.style.display = 'none'; // ซ่อนแถว
+                }
+            });
         }
 
         // เรียกใช้งาน fetchData เมื่อโหลดหน้า

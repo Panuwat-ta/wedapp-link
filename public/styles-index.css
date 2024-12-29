@@ -3,12 +3,12 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f0f0f0; /* เปลี่ยนพื้นหลังให้มีสีอ่อน */
-    overflow-x: hidden;
+    background-color: #f0f0f0; /* เปลี่ยนพื้นหลัง */
+    overflow-x: hidden; /*ปิดการเลื่อนแนวนอน*/
 }
 
 nav {
-    background-color: #003366; /* สีพื้นหลังของเมนูเป็นสีน้ำเงินเข้ม */
+    background-color: #003366; /* สีพื้นหลังของเมนู*/
     overflow: hidden;
 }
 
@@ -19,16 +19,21 @@ nav a {
     text-align: center;
     padding: 14px 20px;
     text-decoration: none;
+    
 }
 
 nav a:hover {
-    background-color: #0055cc; /* เปลี่ยนสีเมื่อเอาเมาส์ไปที่ลิงก์เป็นสีน้ำเงินอ่อน */
+    background-color: #0055cc; /* เปลี่ยนสีเมื่อเอาเมาส์ไปที่ลิงก์ */
     color: white;
 }
 
 nav a.active {
-    background-color: #0044cc; /* สีพื้นหลังของลิงก์ที่เลือกเป็นสีน้ำเงิน */
+    background-color: #0044cc; /* สีพื้นหลังของลิงก์ที่เลือก */
     color: white;
+}
+
+.data-link {
+    text-align: center;
 }
 
 @media screen and (max-width: 600px) {
@@ -36,6 +41,7 @@ nav a.active {
         float: none;
         width: 100%;
         text-align: left;
+        text-align: center;
     }
 
     table {
@@ -71,12 +77,12 @@ th, td {
 }
 
 th {
-    background-color: #003366; /* สีพื้นหลังของ header เป็นสีน้ำเงิน */
+    background-color: #003366; /* สีพื้นหลังของ header */
     color: white;
 }
 
 td button {
-    background-color: #003366; /* ปุ่ม "Open" เป็นสีน้ำเงิน */
+    background-color: #003366; /* ปุ่ม "Open" */
     color: white;
     border: none;
     padding: 10px 15px;
@@ -86,4 +92,17 @@ td button {
 
 td button:hover {
     background-color: #0055cc; /* เปลี่ยนสีเมื่อเอาเมาส์ไปที่ปุ่ม */
+}
+
+
+ /* ช่องค้นหาสำหรับการค้นหาชื่อ */
+ #searchBox {
+    display: block;
+    margin: 20px auto;
+    padding: 10px;
+    width: 80%;
+    max-width: 400px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
 }

@@ -4,12 +4,12 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f0f0f0; /* เปลี่ยนพื้นหลังให้มีสีอ่อน */
+    background-color: #f0f0f0; /* เปลี่ยนพื้นหลัง */
     text-align: center; /* Centers the body content */
 }
 
 nav {
-    background-color: #003366; /* สีพื้นหลังของเมนูเป็นสีน้ำเงินเข้ม */
+    background-color: #003366; /* สีพื้นหลังของเมนู */
     overflow: hidden;
 }
 
@@ -23,12 +23,12 @@ nav a {
 }
 
 nav a:hover {
-    background-color: #0055cc; /* เปลี่ยนสีเมื่อเอาเมาส์ไปที่ลิงก์เป็นสีน้ำเงินอ่อน */
+    background-color: #0055cc; /* เปลี่ยนสีเมื่อเอาเมาส์ไปที่ลิงก์ */
     color: white;
 }
 
 nav a.active {
-    background-color: #0044cc; /* สีพื้นหลังของลิงก์ที่เลือกเป็นสีน้ำเงิน */
+    background-color: #0044cc; /* สีพื้นหลังของลิงก์ที่เลือก */
     color: white;
 }
 
