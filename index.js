@@ -26,26 +26,36 @@ client.connect().then(() => {
 app.use(express.json());
 
 // กำหนดให้ Express ให้บริการไฟล์ static
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, path) => {
+    res.setHeader('Cache-Control', 'no-store'); // หลีกเลี่ยงการแคชไฟล์ static
+  }
+}));
 
 // Route สำหรับหน้า Home
 app.get('/', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store'); // หลีกเลี่ยงการแคชไฟล์ HTML
   res.sendFile(path.join(__dirname, 'templates', 'index.html'));
 });
 
 // Route สำหรับไฟล์ date.html
 app.get('/date.html', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
   res.sendFile(path.join(__dirname, 'templates', 'date.html'));
 });
 
 // Route สำหรับไฟล์ profile.html
 app.get('/profile.html', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
   res.sendFile(path.join(__dirname, 'templates', 'profile.html'));
 });
 
+// Route สำหรับไฟล์ index.html
 app.get('/index.html', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
   res.sendFile(path.join(__dirname, 'templates', 'index.html'));
 });
+
 
 // Route สำหรับส่งข้อมูล MongoDB
 app.get('/data', async (req, res) => {
