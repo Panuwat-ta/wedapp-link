@@ -28,7 +28,7 @@ app.use(express.json());
 // กำหนดให้ Express ให้บริการไฟล์ static
 app.use(express.static(path.join(__dirname, 'public'), {
   setHeaders: (res, path) => {
-    res.setHeader('Cache-Control', 'public, max-age=3600'); // ให้แคชไฟล์ static เป็นเวลา 1 ชั่วโมง
+    res.setHeader('Cache-Control', 'public, max-age=1800'); // ให้แคชไฟล์ static เป็นเวลา 30 นาที
   }
 }));
 
