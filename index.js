@@ -28,7 +28,7 @@ app.use(express.json());
 // กำหนดให้ Express ให้บริการไฟล์ static
 app.use(express.static(path.join(__dirname, 'public'), {
   setHeaders: (res, path) => {
-    res.setHeader('Cache-Control', 'public, max-age=1800'); // ให้แคชไฟล์ static เป็นเวลา 30 นาที
+    res.setHeader('Cache-Control', 'public, max-age=3600'); // ให้แคชไฟล์ เป็นเวลา 1 ชั่วโมง
   }
 }));
 
@@ -36,20 +36,24 @@ app.use(express.static(path.join(__dirname, 'public'), {
 // Route สำหรับหน้า Home
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'templates', 'index.html'));
+  res.setHeader('Cache-Control', 'public, max-age=3600');
 });
 
 // Route สำหรับไฟล์ date.html
 app.get('/date.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'templates', 'date.html'));
+  res.setHeader('Cache-Control', 'public, max-age=3600');
 });
 
 // Route สำหรับไฟล์ profile.html
 app.get('/profile.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'templates', 'profile.html'));
+  res.setHeader('Cache-Control', 'public, max-age=3600');
 });
 
 app.get('/index.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'templates', 'index.html'));
+  res.setHeader('Cache-Control', 'public, max-age=3600');
 });
 
 // Route สำหรับส่งข้อมูล MongoDB
