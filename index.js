@@ -119,6 +119,44 @@ app.put('/edit-link/:id', async (req, res) => {
   }
 });
 
+
+// Route สำหรับแก้ไข URL ของลิงก์
+app.put('/edit-link-url/:id', async (req, res) => {
+  const { id } = req.params;
+  const { url } = req.body;
+
+  if (!url) {
+    return res.status(400).send('ต้องระบุ URL ใหม่');
+  }
+
+  try {
+    const collection = client.db("Link").collection("link");
+    
+    // ตรวจสอบว่า id ถูกต้องหรือไม่
+    if (!ObjectId.isValid(id)) {
+        return res.status(400).send('ID ไม่ถูกต้อง');
+    }
+
+    const result = await collection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { url: url } }
+    );
+
+    if (result.matchedCount === 0) {
+        return res.status(404).send('ไม่พบลิงก์ที่ต้องการแก้ไข');
+    }
+
+    if (result.modifiedCount === 0) {
+        return res.status(400).send('ไม่มีการเปลี่ยนแปลงข้อมูล');
+    }
+
+    res.status(200).send('แก้ไข URL ลิงก์สำเร็จ');
+  } catch (error) {
+    console.error("Error updating link URL:", error);
+    res.status(500).send(`Error updating link URL: ${error.message}`);
+  }
+});
+
 // Route สำหรับลบลิงก์
 app.delete('/delete-link/:id', async (req, res) => {
   const { id } = req.params;

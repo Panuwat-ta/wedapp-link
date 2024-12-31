@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data</title>
     <link rel="stylesheet" href="/styles-data.css">
-    
 </head>
 <body>
     <nav>
@@ -48,23 +47,33 @@
                     const link = document.createElement('a');
                     link.href = url;
                     link.textContent = `${date} - ${name}`;
+                    link.target = '_blank';
 
                     const buttonGroup = document.createElement('div');
                     buttonGroup.className = 'button-group';
 
-                    const editBtn = document.createElement('button');
-                    editBtn.textContent = 'แก้ไข';
-                    editBtn.className = 'edit-btn';
-                    editBtn.addEventListener('click', () => editLink(_id, name));
+                    
+                    const editNameBtn = document.createElement('button');
+                    editNameBtn.textContent = 'แก้ไขชื่อ';
+                    editNameBtn.className = 'editname-btn';
+                    editNameBtn.addEventListener('click', () => editLink(_id, name));
 
+                    
+                    const editUrlBtn = document.createElement('button');
+                    editUrlBtn.textContent = 'แก้ไขลิ้ง';
+                    editUrlBtn.className = 'editlink-btn';
+                    editUrlBtn.addEventListener('click', () => editLinkUrl(_id, url));
+
+                    
                     const deleteBtn = document.createElement('button');
                     deleteBtn.textContent = 'ลบ';
                     deleteBtn.className = 'delete-btn';
                     deleteBtn.addEventListener('click', () => deleteLink(_id));
 
-                    buttonGroup.appendChild(editBtn);
+                    buttonGroup.appendChild(editNameBtn);
+                    buttonGroup.appendChild(editUrlBtn);
                     buttonGroup.appendChild(deleteBtn);
-                    
+
                     linkBox.appendChild(link);
                     linkBox.appendChild(buttonGroup);
                     container.appendChild(linkBox);
@@ -109,7 +118,7 @@
             }
         }
 
-        // Edit an existing link
+        // Edit an existing link's name
         async function editLink(id, currentName) {
             const password = prompt('กรุณาใส่รหัสผ่านเพื่อแก้ไขลิงก์:');
             const correctPassword = 'panuwat';
@@ -127,14 +136,12 @@
                             body: JSON.stringify({ name: newName }),
                         });
 
-                        const responseData = await response.text();
-                        
                         if (response.ok) {
                             alert('แก้ไขชื่อลิงก์สำเร็จ');
                             loadLinks();
                         } else {
+                            const responseData = await response.text();
                             alert(`ไม่สามารถแก้ไขชื่อลิงก์ได้: ${responseData}`);
-                            console.error('Error response:', responseData);
                         }
                     } catch (error) {
                         console.error('Error editing link:', error);
@@ -143,6 +150,53 @@
                 }
             } else {
                 alert('รหัสผ่านไม่ถูกต้อง');
+            }
+        }
+
+        // Edit an existing link's URL
+        async function editLinkUrl(id, currentUrl) {
+            const password = prompt('กรุณาใส่รหัสผ่านเพื่อแก้ไขลิงก์:');
+            const correctPassword = 'panuwat';
+
+            if (password === correctPassword) {
+                const newUrl = prompt('กรุณาใส่ URL ใหม่:', currentUrl);
+                
+                if (newUrl && newUrl !== currentUrl && isValidUrl(newUrl)) {
+                    try {
+                        const response = await fetch(`/edit-link-url/${id}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ url: newUrl }),
+                        });
+
+                        if (response.ok) {
+                            alert('แก้ไข URL ลิงก์สำเร็จ');
+                            loadLinks();
+                        } else {
+                            const responseData = await response.text();
+                            alert(`ไม่สามารถแก้ไข URL ลิงก์ได้: ${responseData}`);
+                        }
+                    } catch (error) {
+                        console.error('Error editing link URL:', error);
+                        alert(`เกิดข้อผิดพลาดในการแก้ไข URL ลิงก์: ${error.message}`);
+                    }
+                } else {
+                    alert('URL ไม่ถูกต้องหรือไม่ได้เปลี่ยนแปลง');
+                }
+            } else {
+                alert('รหัสผ่านไม่ถูกต้อง');
+            }
+        }
+
+        // Helper function: ตรวจสอบ URL
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
             }
         }
 

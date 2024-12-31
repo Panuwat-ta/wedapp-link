@@ -74,7 +74,7 @@ nav a.active {
     gap: 5px;
 }
 
-.delete-btn, .edit-btn {
+.delete-btn, .editname-btn, .editlink-btn {
     border: none;
     color: white;
     padding: 8px 12px;
@@ -85,19 +85,27 @@ nav a.active {
 }
 
 .delete-btn {
-    background: #ff4d4d;
+    background: #e31818;
 }
 
-.edit-btn {
-    background: #4CAF50;
+.editname-btn {
+    background: #04a033;
+}
+
+.editlink-btn {
+    background: #b3d713;
 }
 
 .delete-btn:hover {
     background-color: #ff3333;
 }
 
-.edit-btn:hover {
-    background-color: #45a049;
+.editname-btn:hover {
+    background-color: #08bf11;
+}
+
+.editlink-btn:hover {
+    background-color: #d9e715;
 }
 
 input[type="text"] {
