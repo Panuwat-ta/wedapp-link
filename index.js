@@ -30,22 +30,27 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Route สำหรับหน้า Home
 app.get('/', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');  // ตั้งค่า header ก่อนส่งไฟล์
   res.sendFile(path.join(__dirname, 'templates', 'index.html'));
 });
 
 // Route สำหรับไฟล์ date.html
 app.get('/date.html', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
   res.sendFile(path.join(__dirname, 'templates', 'date.html'));
 });
 
 // Route สำหรับไฟล์ profile.html
 app.get('/profile.html', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
   res.sendFile(path.join(__dirname, 'templates', 'profile.html'));
 });
 
 app.get('/index.html', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
   res.sendFile(path.join(__dirname, 'templates', 'index.html'));
 });
+
 
 // Route สำหรับส่งข้อมูล MongoDB
 app.get('/data', async (req, res) => {
