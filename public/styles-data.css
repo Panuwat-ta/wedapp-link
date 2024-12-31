@@ -93,7 +93,7 @@ nav a.active {
 }
 
 .editlink-btn {
-    background: #b3d713;
+    background: #d7cd13;
 }
 
 .delete-btn:hover {
@@ -137,12 +137,26 @@ input[type="submit"]:hover {
 
 @media screen and (max-width: 600px) {
     nav a {
+        display: block;
         float: none;
         width: 100%;
-        text-align: left;
+        text-align: left;   
     }
-    
     #contact-box {
         width: 90%;
+        padding: 20px;
+    }
+
+    .button-group {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .delete-btn, .editname-btn, .editlink-btn {
+        width: 100%;
+    }
+
+    input[type="text"], input[type="submit"] {
+        content:pointer;
     }
 }
