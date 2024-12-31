@@ -25,11 +25,13 @@ client.connect().then(() => {
 // middleware สำหรับการ parse JSON
 app.use(express.json());
 
+// กำหนดให้ Express ให้บริการไฟล์ static
 app.use(express.static(path.join(__dirname, 'public'), {
   setHeaders: (res, path) => {
-    res.setHeader('Cache-Control', 'no-store'); // หลีกเลี่ยงการแคชไฟล์ static
+    res.setHeader('Cache-Control', 'public, max-age=3600'); // ให้แคชไฟล์ static เป็นเวลา 1 ชั่วโมง
   }
 }));
+
 
 // Route สำหรับหน้า Home
 app.get('/', (req, res) => {
