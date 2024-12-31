@@ -27,6 +27,7 @@ app.use(express.json());
 
 // กำหนดให้ Express ให้บริการไฟล์ static
 app.use(express.static(path.join(__dirname, 'public')));
+res.setHeader('Cache-Control', 'no-store');
 
 // Route สำหรับหน้า Home
 app.get('/', (req, res) => {
