@@ -39,6 +39,12 @@ nav a.active {
         text-align: left;
     }
 }
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    border: 1px solid #ccc;
+    padding: 20px;
+}
 
 /* Apply styles directly to the image */
 img {
