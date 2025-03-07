@@ -32,7 +32,10 @@ nav a.active {
     color: white;
 }
 
-
+.icon {
+    width: 150px;
+    
+}
 
 .data-link {
     text-align: center;
