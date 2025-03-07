@@ -32,6 +32,13 @@ nav a.active {
     color: white;
 }
 
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    border: 1px solid #ccc;
+    padding: 20px;
+}
+
 .data-link {
     text-align: center;
 }
