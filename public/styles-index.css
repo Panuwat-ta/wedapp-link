@@ -34,14 +34,13 @@ nav a.active {
 
 .icon {
     width: 200px;
-  }
+    float: left;
+    
+}
 
 .data-link {
-    text-align: center; /* จัดข้อความตรงกลาง */
-    display: flex; /* ใช้ Flexbox เพื่อจัดวาง */
-    justify-content: center; /* จัดเนื้อหาทั้งหมดตรงกลาง */
-    align-items: center; /* จัดให้เนื้อหาอยู่กึ่งกลางแนวตั้ง */
-  }
+    text-align: center;
+}
 
 @media screen and (max-width: 600px) {
     nav a {
