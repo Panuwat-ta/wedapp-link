@@ -35,7 +35,7 @@ app.use(express.static(path.join(__dirname, 'public'), {
 // Route สำหรับหน้า Home
 app.get('/', (req, res) => {
   res.setHeader('Cache-Control', 'no-store'); // หลีกเลี่ยงการแคชไฟล์ HTML
-  res.sendFile(path.join(__dirname, 'templates', 'index.html'));
+  res.sendFile(path.join(__dirname, 'templates', 'test.html'));
 });
 
 // Route สำหรับไฟล์ date.html
