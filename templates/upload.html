@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload to Google Drive</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/styles/styles-upload.css">
+    <script src="/script/script-upload.js" defer></script>
+
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <button class="menu-toggle" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="nav-links" id="navLinks">
+                <a href="./index.html"><i class="fas fa-home"></i> Home</a>
+                <a href="./files.html"><i class="fas fa-folder-open"></i> Files</a>
+                <a href="./date.html"><i class="fas fa-calendar-alt"></i> Update</a>
+                <a href="./upload.html" class="active"><i class="fas fa-cloud-upload-alt"></i> Upload</a>
+                <a href="./about.html"><i class="fas fa-info-circle"></i> About</a>
+                <a href="./suport.html"><i class="fas fa-hand-holding-heart"></i> Suport</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="header">
+        <h1>Upload to Google Drive</h1>
+        <p>Upload your files to Google Drive</p>
+    </div>
+
+    <div class="container">
+        <div class="upload-container">
+            <div class="upload-area" id="dropArea">
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <h3>Drag & Drop files here</h3>
+                <p>or</p>
+                <button class="btn" id="selectFiles">Select Files</button>
+                <input type="file" id="fileInput" multiple style="display: none;">
+            </div>
+            
+            <div class="file-list" id="fileList"></div>
+            
+            <div class="success-message" id="successMessage"></div>
+            <div class="error-message" id="errorMessage"></div>
+            
+            <button class="btn" id="uploadBtn" disabled>Upload to Google Drive</button>
+            
+            <button id="authBtn" class="google-btn" style="display: none;">
+                <i class="fab fa-google"></i> Sign in with Google
+            </button>
+            <button id="signOutBtn" class="google-btn" style="display: none;">
+                <i class="fas fa-sign-out-alt"></i> Sign Out
+            </button>
+        </div>
+        
+        <div class="instructions">
+            <h3><i class="fas fa-info-circle"></i> Upload Instructions:</h3>
+            <ul>
+                <li><i class="fas fa-check-circle"></i> Sign in with your Google account to enable Drive uploads</li>
+                <li><i class="fas fa-check-circle"></i> Files will be uploaded to the shared Google Drive folder</li>
+                <li><i class="fas fa-check-circle"></i> Maximum file size: 750MB (Google Drive API limit)</li>
+                <li><i class="fas fa-check-circle"></i> Supported formats: All file types accepted by Google Drive</li>
+                <li><i class="fas fa-check-circle"></i> Multiple files can be uploaded at once</li>
+            </ul>
+        </div>
+    </div>
+
+
+
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client"></script>
+    
+   
+</body>
+</html>

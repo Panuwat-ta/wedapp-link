@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/styles/styles-suport.css"> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="/script/script-suport.js" defer></script>
+    
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <button class="menu-toggle" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="nav-links" id="navLinks">
+                <a href="./index.html"><i class="fas fa-home"></i> Home</a>
+                <a href="./files.html"><i class="fas fa-folder-open"></i> Files</a>
+                <a href="./date.html"><i class="fas fa-calendar-alt"></i> Update</a>
+                <a href="./upload.html"><i class="fas fa-cloud-upload-alt"></i> Upload</a>
+                <a href="./about.html"><i class="fas fa-info-circle"></i> About</a>
+                <a href="./suport.html" class="active"><i class="fas fa-hand-holding-heart"></i> Suport</a>
+            </div>
+        </div>
+    </nav>
+
+    <img src="/img/test.png" class="rocket left" alt="Rocket Left">
+    <img src="/img/test.png" class="rocket right" alt="Rocket Right">
+    <img src="/img/test.png" class="rocket center-left" alt="Rocket Center Left">
+    <img src="/img/test.png" class="rocket center-right" alt="Rocket Center Right">
+    
+    <div class="maintenance-container">
+        <h1>Support</h1>
+        <img src="/img/QR_bank.jpg" class="qr-code" alt="QR Code">
+        <p class="support-text">Support me</p>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Panuwat Takham. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('menuToggle').addEventListener('click', function() {
+            document.getElementById('navLinks').classList.toggle('active');
+        });
+
+        function setActive(element) {
+            document.querySelectorAll('nav a').forEach(link => {
+                link.classList.remove('active');
+            });
+            element.classList.add('active');
+        }
+    </script>
+</body>
+</html>

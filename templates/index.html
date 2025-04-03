@@ -3,87 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>panuwat</title>
-    <link rel="stylesheet" href="/styles-index.css">
-
+    <title>Data Links</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/styles/styles-index.css">
+    <script src="/script/script-index.js" defer></script>
 
 </head>
 <body>
     <nav>
-        <a href="./index.html" class="active" onclick="setActive(this)">Home</a>
-        <a href="./date.html" onclick="setActive(this)">Update</a>
-        <a href="./profile.html" onclick="setActive(this)">Profile</a>
+        <div class="nav-container">
+            <button class="menu-toggle" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="nav-links" id="navLinks">
+                <a href="./index.html" class="active"><i class="fas fa-home"></i> Home</a>
+                <a href="./files.html"><i class="fas fa-folder-open"></i> Files</a>
+                <a href="./date.html"><i class="fas fa-calendar-alt"></i> Update</a>
+                <a href="./upload.html"><i class="fas fa-cloud-upload-alt"></i> Upload</a>
+                <a href="./about.html"><i class="fas fa-info-circle"></i> About</a>
+                <a href="./suport.html"><i class="fas fa-hand-holding-heart"></i> Suport</a>
+            </div>
+        </div>
     </nav>
-    
-    <div class="data-link">
-        <img src="gif.gif" alt="Icon" class="icon">  
-    <h1>Data Link</h1>
+
+    <div class="header">
+        <div class="header-content">
+            <img src="/img/gif.gif" alt="Data Links Icon">
+            <div>
+                <h1>Data Links</h1>
+                <p>Access all your shared links in one place</p>
+            </div>
+        </div>
     </div>
-    <input type="text" id="searchBox" placeholder="ค้นหา..." oninput="filterTable()">
-    
-    <table id="dataTable">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Link</th>
-                <th>Name</th>
-                <th>Open</th>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-    </table>
 
-    <script>
-        function setActive(menuItem) {
-            const menuItems = document.querySelectorAll('nav a');
-            menuItems.forEach(item => item.classList.remove('active'));
-            menuItem.classList.add('active');
-        }
+    <div class="container">
+        <div class="search-container">
+            <input type="text" id="searchBox" class="search-box" placeholder="Search..." oninput="filterTable()">
+        </div>
 
-        async function fetchData() {
-            try {
-                const response = await fetch('/data'); // ดึงข้อมูลจากเซิร์ฟเวอร์
-                const data = await response.json(); // แปลงข้อมูลเป็น JSON
-                const tableBody = document.querySelector('#dataTable tbody');
-                tableBody.innerHTML = ''; // ล้างข้อมูลเก่า
-
-                // เพิ่มข้อมูลในตาราง
-                data.forEach(item => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${item.date}</td> <!-- แสดงวันที่จากเซิร์ฟเวอร์ -->
-                        <td>${item.url}</td> <!-- แสดงลิงก์จากเซิร์ฟเวอร์ -->
-                        <td>${item.name}</td> <!-- แสดงชื่อจากเซิร์ฟเวอร์ -->
-                        <td><button onclick="window.open('${item.url}', '_blank')">Open</button></td> <!-- ปุ่มเปิดลิงก์ -->
-                    `;
-                    tableBody.appendChild(row);
-                });
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
-        }
-
-
-        //ค้นหา
-        function filterTable() {
-            const query = document.getElementById('searchBox').value.toLowerCase(); // คำค้นหา
-            const rows = document.querySelectorAll('#dataTable tbody tr');
-            rows.forEach(row => {
-                const cells = row.getElementsByTagName('td');
-                const name = cells[2].textContent.toLowerCase(); // ค้นหาจากคอลัมน์ "ชื่อ"
-                
-                // ตรวจสอบว่าคำค้นหาตรงกับชื่อ
-                if (name.includes(query)) {
-                    row.style.display = ''; // แสดงแถว
-                } else {
-                    row.style.display = 'none'; // ซ่อนแถว
-                }
-            });
-        }
-
-        // เรียกใช้งาน fetchData เมื่อโหลดหน้า
-        fetchData();
-    </script>
+        <table class="data-table" id="dataTable">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Link</th>
+                    <th>Name</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be loaded here -->
+            </tbody>
+        </table>
+    </div>
 </body>
 </html>

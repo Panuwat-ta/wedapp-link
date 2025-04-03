@@ -1,0 +1,57 @@
+/* Add styles for the message container */
+.message-container {
+    display: none;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.message-container.info {
+    background-color: #d9edf7;
+    color: #31708f;
+}
+
+.message-container.success {
+    background-color: #dff0d8;
+    color: #3c763d;
+}
+
+.message-container.error {
+    background-color: #f2dede;
+    color: #a94442;
+}
+
+.input-wrapper {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 5px 10px;
+    margin-bottom: 15px;
+    background-color: #fff;
+}
+
+.input-wrapper i {
+    margin-right: 10px;
+    color: #888;
+}
+
+.input-field {
+    border: none;
+    outline: none;
+    flex: 1;
+    font-size: 14px;
+    padding: 5px;
+}
+
+.input-wrapper .toggle-password {
+    cursor: pointer;
+    color: #888;
+}
+
+.input-wrapper:focus-within {
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}

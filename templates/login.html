@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login & Register</title>
+    <link rel="stylesheet" href="/styles/styles-login.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="/script/script-login.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <div class="form-container" id="loginContainer">
+            <div class="form-header">
+                <h2>Login</h2>
+                <p class="form-description">Welcome back! Please login to your account</p>
+            </div>
+            <form id="loginForm" onsubmit="event.preventDefault(); login();">
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="loginUsername" placeholder="Username" required>
+                    </div>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="loginPassword" placeholder="Password" required>
+                        <i class="far fa-eye-slash toggle-password" aria-label="Toggle password visibility" onclick="togglePasswordVisibility('loginPassword', this)"></i>
+                    </div>
+                </div>
+
+                <a href="#" class="forgot-password">Forgot password?</a>
+                
+                <button type="submit" class="submit-btn">Login</button>
+                <p class="switch-form">Don't have an account? <a href="#" onclick="toggleForm('register')">Register here</a></p>
+            </form>
+        </div>
+
+        <div class="form-container" id="registerContainer" style="display:none;">
+            <div class="form-header">
+                <h2>Register</h2>
+                <p class="form-description">Create your account and join us</p>
+            </div>
+            <form id="registerForm" onsubmit="event.preventDefault(); register();">
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="registerUsername" placeholder="Username" required>
+                    </div>
+                    <div class="input-wrapper">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="registerEmail" placeholder="Email" required>
+                    </div>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="registerPassword" placeholder="Password" required>
+                        <i class="far fa-eye-slash toggle-password" onclick="togglePasswordVisibility('registerPassword', this)"></i>
+                    </div>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+                        <i class="far fa-eye-slash toggle-password" onclick="togglePasswordVisibility('confirmPassword', this)"></i>
+                    </div>
+                </div>
+                <div class="terms">
+                    <input type="checkbox" id="terms" required>
+                    <label for="terms">I agree to the <a href="#">Terms and Conditions</a></label>
+                </div>
+                <button type="submit" class="submit-btn">Register</button>
+                <p class="switch-form">Already have an account? <a href="#" onclick="toggleForm('login')">Login here</a></p>
+            </form>
+        </div>
+    </div>
+    <div id="alertBox" class="alert-box"></div>
+</body>
+</html>
