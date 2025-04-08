@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Me</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/styles/styles-logout.css">
+    <script src="/script/script-logout.js" defer></script>
+
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <button class="menu-toggle" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="nav-links" id="navLinks">
+                <a href="./index.html"><i class="fas fa-home"></i> Home</a>
+                <a href="./files.html"><i class="fas fa-folder-open"></i> Files</a>
+                <a href="./date.html"><i class="fas fa-calendar-alt"></i> Update</a>
+                <a href="./upload.html"><i class="fas fa-cloud-upload-alt"></i> Upload</a>
+                <a href="./about.html" ><i class="fas fa-info-circle"></i> About</a>
+                <a href="./suport.html"><i class="fas fa-hand-holding-heart"></i> Suport</a>
+                <a href="./login.html" id="loginLink" style="display: none;"><i class="fas fa-sign-in-alt"></i> Login</a>
+                <a href="./logout.html" id="logoutLink" class="active"><i class="fas fa-user"></i> Profile</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="header">
+        <h1 id="usernameHeader">welcome</h1>
+    </div>
+
+    <div class="container">
+        <div class="profile-card">
+            <img src="/img/b1.jpg" alt="Profile Picture" class="profile-img">
+            <div class="profile-info">
+                <div class="info-row">
+                    <h2 class="info-label"><i class="fas fa-user"></i> Username: </h2>
+                    <h2 class="profile-name" id="profileName">Loading...</h2>
+                </div>
+                <div class="info-row">
+                    <h2 class="info-label"><i class="fas fa-envelope"></i> G-mail: </h2>
+                    <h2 class="profile-email" id="profileEmail">Loading...</h2>
+                </div>
+                <div class="visitor-info">
+                    <div class="info-row">
+                        <h2 class="info-label"><i class="fas fa-link"></i> number of links: </h2>
+                        <h2 id="number_of_links">Loading...</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="button-container">
+                <button id="editProfileButton" class="edit-btn"><i class="fas fa-edit"></i> Edit Profile</button>
+                <button id="logoutButton" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </div>
+</div>
+
+</body>
+</html>

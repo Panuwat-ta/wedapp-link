@@ -41,6 +41,14 @@ nav {
 
 .nav-links {
     display: flex;
+    flex: 1;
+    justify-content: flex-end; /* จัดให้ลิงก์ทั้งหมดชิดขวา */
+}
+
+/* จัดให้ลิงก์ Login อยู่ขวาสุด */
+.nav-links #loginLink,
+.nav-links #logoutLink {
+    margin-left: auto;
 }
 
 nav a {
@@ -292,6 +300,12 @@ nav a i {
         display: none;
         flex-direction: column;
         width: 100%;
+        justify-content: flex-start; /* ใน mobile ให้กลับมาแสดงแบบปกติ */
+    }
+
+    .nav-links #loginLink,
+    .nav-links #logoutLink {
+        margin-left: 0;
     }
     
     .nav-links.active {

@@ -184,3 +184,28 @@ function showError(error) {
     `;
     document.getElementById('fileCount').textContent = 'Error';
 }
+
+
+
+// ตรวจสอบสถานะการล็อกอินเมื่อโหลดหน้า
+document.addEventListener('DOMContentLoaded', function() {
+    const isLoggedIn = localStorage.getItem('username') ? true : false;
+    updateNavLinks(isLoggedIn);
+    fetchDailyVisitors();
+});
+
+// อัพเดทการแสดงผลของลิงก์ Login/Logout
+function updateNavLinks(isLoggedIn) {
+    const loginLink = document.getElementById('loginLink');
+    const logoutLink = document.getElementById('logoutLink');
+    
+    if (!loginLink || !logoutLink) return;
+    
+    if (isLoggedIn) {
+        loginLink.style.display = 'none';
+        logoutLink.style.display = 'block';
+    } else {
+        loginLink.style.display = 'block';
+        logoutLink.style.display = 'none';
+    }
+}
