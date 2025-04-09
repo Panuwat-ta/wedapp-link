@@ -10,6 +10,73 @@ function setActive(element) {
     element.classList.add('active');
 }
 
+// Modal functions
+function createModal() {
+    const modalHTML = `
+        <div class="modal-overlay" id="imageModal">
+            <div class="modal-content">
+                <button class="close-modal" id="closeModal">&times;</button>
+                <img src="" alt="Profile Image" class="modal-image" id="modalImage">
+                <div class="modal-user-info">
+                    <div class="modal-username" id="modalUsername"></div>
+                    <div class="modal-date" id="modalDate"></div>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Add event listeners for the modal
+    document.getElementById('closeModal').addEventListener('click', closeModal);
+    document.getElementById('imageModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeModal();
+        }
+    });
+    
+    // Close modal when pressing Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeModal();
+        }
+    });
+}
+
+function openModal(imageSrc, username, date) {
+    const modal = document.getElementById('imageModal');
+    const modalImage = document.getElementById('modalImage');
+    const modalUsername = document.getElementById('modalUsername');
+    const modalDate = document.getElementById('modalDate');
+    
+    modalImage.src = imageSrc;
+    modalImage.onerror = function() {
+        this.src = '/img/b1.jpg';
+    };
+    modalUsername.textContent = username || 'Anonymous';
+    modalDate.textContent = `Joined: ${date || 'Unknown date'}`;
+    
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+    const modal = document.getElementById('imageModal');
+    modal.classList.remove('active');
+    document.body.style.overflow = 'auto';
+}
+
+function setupImageClickHandlers() {
+    document.querySelectorAll('.user-avatar').forEach(avatar => {
+        avatar.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const row = this.closest('tr');
+            const username = row.querySelector('td[data-label="Username"] span').textContent;
+            const date = row.querySelector('td[data-label="Date"]').textContent;
+            openModal(this.src, username, date);
+        });
+    });
+}
+
 async function fetchData() {
     try {
         const tableBody = document.querySelector('#dataTable tbody');
@@ -56,6 +123,9 @@ async function fetchData() {
             `;
             tableBody.appendChild(row);
         });
+        
+        // Set up click handlers for the avatars
+        setupImageClickHandlers();
     } catch (error) {
         const tableBody = document.querySelector('#dataTable tbody');
         tableBody.innerHTML = `
@@ -93,11 +163,6 @@ function filterTable() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    fetchData();
-    updateNavLinks(localStorage.getItem('username') ? true : false);
-});
-
 // อัพเดทการแสดงผลของลิงก์ Login/Logout
 function updateNavLinks(isLoggedIn) {
     const loginLink = document.getElementById('loginLink');
@@ -113,3 +178,9 @@ function updateNavLinks(isLoggedIn) {
         logoutLink.style.display = 'none';
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    createModal(); // Create the modal when page loads
+    fetchData();
+    updateNavLinks(localStorage.getItem('username') ? true : false);
+});

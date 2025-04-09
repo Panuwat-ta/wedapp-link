@@ -255,6 +255,93 @@ nav a i {
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid var(--light-color);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.user-avatar:hover {
+    transform: scale(1.05);
+}
+
+/* Image Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background: #ffffff05;
+    border-radius: 10px;
+    max-width: 90%;
+    max-height: 90%;
+    width: auto;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+}
+
+.modal-image {
+    max-height: 70vh;
+    max-width: 80%;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+.modal-user-info {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.modal-username {
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin-bottom: 5px;
+    color: white
+    
+}
+
+.modal-date {
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.close-modal {
+    position: absolute;
+    top: 0px;
+    right: 5px;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-light);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.close-modal:hover {
+    color: var(--accent-color);
+    transform: rotate(90deg);
 }
 
 @media (max-width: 768px) {
@@ -339,7 +426,7 @@ nav a i {
     }
     
     .data-table td:before {
-        content: attr(data-label) ": ";
+        content: attr(data-label);
         font-weight: bold;
         width: 100px;
         flex-shrink: 0;
@@ -361,15 +448,8 @@ nav a i {
         align-items: center;
     }
     
-    /* แก้ไขส่วนนี้เพื่อแสดง username พร้อม label */
-    .data-table td[data-label="Username"] {
-        display: flex;
-        align-items: center;
-    }
-    
     .data-table td[data-label="Username"]:before {
-        content: "Username: ";
-        display: inline;
+        display: none;
     }
 }
 
