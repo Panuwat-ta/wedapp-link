@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/styles/styles-upload.css">
     <script src="/script/script-upload.js" defer></script>
-
 </head>
 <body>
     <nav>
@@ -72,11 +71,23 @@
         </div>
     </div>
 
-
+    <div id="folderPrompt" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Select Destination Folder</h3>
+                <button id="createFolderBtn" class="btn btn-create">
+                    <i class="fas fa-folder-plus"></i> New Folder
+                </button>
+            </div>
+            <div id="folderList" class="folder-list"></div>
+            <div class="modal-buttons">
+                <button id="cancelFolderSelect" class="btn btn-cancel">Cancel</button>
+                <button id="confirmFolderSelect" class="btn">Upload</button>
+            </div>
+        </div>
+    </div>
 
     <script src="https://apis.google.com/js/api.js"></script>
     <script src="https://accounts.google.com/gsi/client"></script>
-    
-   
 </body>
 </html>

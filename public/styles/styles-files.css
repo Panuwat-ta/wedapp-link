@@ -41,10 +41,9 @@ nav {
 .nav-links {
     display: flex;
     flex: 1;
-    justify-content: flex-end; /* จัดให้ลิงก์ทั้งหมดชิดขวา */
+    justify-content: flex-end;
 }
 
-/* จัดให้ลิงก์ Login อยู่ขวาสุด */
 .nav-links #loginLink,
 .nav-links #logoutLink {
     margin-left: auto;
@@ -86,7 +85,6 @@ nav a i {
     font-size: 0.9em;
 }
 
-/* Mobile menu toggle */
 .menu-toggle {
     display: none;
     background: none;
@@ -119,7 +117,7 @@ nav a i {
 }
 
 .container {
-    max-width: 1000px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 0 20px;
 }
@@ -139,11 +137,89 @@ nav a i {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .file-list-header h2 {
     font-size: 1.3rem;
     font-weight: 500;
+    margin-right: 10px;
+}
+
+.folder-select {
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    min-width: 120px;
+}
+
+.folder-select:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.folder-select option {
+    background: white;
+    color: var(--text-color);
+    padding: 8px;
+}
+
+.search-container {
+    flex: 1;
+    min-width: 200px;
+    max-width: 300px;
+}
+
+.search-box {
+    width: 100%;
+    padding: 8px 15px;
+    border-radius: 20px;
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 0.9rem;
+}
+
+.search-box::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+.search-box:focus {
+    outline: none;
+    border-color: white;
+}
+
+.view-toggle {
+    display: flex;
+    gap: 5px;
+}
+
+.view-toggle button {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.view-toggle button:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.view-toggle button.active {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .file-count {
@@ -153,13 +229,36 @@ nav a i {
     font-size: 0.9rem;
 }
 
+.file-list-description {
+    display: flex;
+    padding: 12px 20px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #eee;
+    font-weight: 500;
+    align-items: center;
+}
+
+.file-name {
+    flex: 3;
+    padding-right: 15px;
+}
+
+.file-origin, .file-date, .file-size {
+    flex: 2;
+    padding-right: 15px;
+}
+
+.file-view, .file-download-table {
+    flex: 1;
+    text-align: center;
+}
+
 .file-item {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 20px;
+    padding: 12px 20px;
     border-bottom: 1px solid #eee;
     transition: background-color 0.2s ease;
+    align-items: center;
 }
 
 .file-item:last-child {
@@ -170,64 +269,75 @@ nav a i {
     background-color: #f9f9f9;
 }
 
-.file-info {
-    display: flex;
-    align-items: center;
-    flex-grow: 1;
-}
-
 .file-icon {
     margin-right: 15px;
     color: var(--primary-color);
-    font-size: 1.5rem;
-    width: 40px;
+    font-size: 1.2rem;
+    width: 24px;
     text-align: center;
+    flex-shrink: 0;
 }
 
 .file-name {
+    flex: 3;
     font-weight: 500;
     color: var(--text-color);
-    flex-grow: 1;
+    display: flex;
+    align-items: center;
+}
+
+.file-origin, .file-date, .file-size {
+    flex: 2;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.file-view, .file-download-table {
+    flex: 1;
+    text-align: center;
 }
 
 .file-link {
     color: var(--primary-color);
     text-decoration: none;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    padding: 8px 15px;
+    justify-content: center;
+    padding: 6px 12px;
     border-radius: 5px;
     transition: all 0.2s ease;
+    width: 80px;
+    margin: 0 auto;
 }
 
 .file-link:hover {
     background-color: rgba(66, 133, 244, 0.1);
-    text-decoration: none;
 }
 
 .file-link i {
-    margin-left: 8px;
+    margin-left: 6px;
     font-size: 0.8em;
 }
 
 .file-download {
     color: var(--secondary-color);
     text-decoration: none;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    padding: 8px 15px;
+    justify-content: center;
+    padding: 6px 12px;
     border-radius: 5px;
     transition: all 0.2s ease;
-    margin-left: 10px;
+    width: 100px;
+    margin: 0 auto;
 }
 
 .file-download:hover {
     background-color: rgba(52, 168, 83, 0.1);
-    text-decoration: none;
 }
 
 .file-download i {
-    margin-left: 8px;
+    margin-left: 6px;
     font-size: 0.8em;
 }
 
@@ -264,8 +374,279 @@ nav a i {
     100% { transform: rotate(360deg); }
 }
 
+.grid-view {
+    display: none;
+}
 
+.grid-view.active {
+    display: block;
+}
 
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.grid-item {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.grid-item:hover {
+    transform: translateY(-5px);
+}
+
+.grid-item-icon {
+    padding: 20px;
+    text-align: center;
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    background: #f5f7fa;
+}
+
+.grid-item-name {
+    padding: 12px;
+    text-align: center;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.grid-item-actions {
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+    border-top: 1px solid #eee;
+    gap: 10px;
+}
+
+.grid-view .file-link,
+.grid-view .file-download {
+    width: auto;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+}
+
+.download-prompt {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    min-width: 300px;
+    max-width: 400px;
+    padding: 0;
+    animation: slideIn 0.3s ease;
+}
+
+.download-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 8px 8px 0 0;
+}
+
+.download-title {
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+.download-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.download-button {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.download-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.download-content {
+    padding: 15px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 4px;
+    background: #eee;
+    border-radius: 2px;
+    margin: 10px 0;
+    overflow: hidden;
+}
+
+.progress {
+    height: 100%;
+    background: var(--primary-color);
+    transition: width 0.3s ease;
+}
+
+.download-details {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+.file-progress {
+    display: flex;
+    align-items: center;
+    margin: 5px 0;
+    padding: 5px;
+    border-radius: 4px;
+    background: #f5f5f5;
+}
+
+.file-progress i {
+    margin-right: 8px;
+    color: var(--primary-color);
+}
+
+.file-progress-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-progress-percent {
+    margin-left: 8px;
+    min-width: 45px;
+    text-align: right;
+}
+
+.minimized {
+    min-width: 200px;
+    height: auto;
+    border-radius: 8px;
+}
+
+.minimized .download-content {
+    display: none;
+}
+
+.minimized .download-header {
+    border-radius: 8px;
+    border-bottom: none;
+}
+
+.minimized .minimize-btn i {
+    transform: rotate(-180deg);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.download-queue {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.download-item {
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 12px;
+    position: relative;
+}
+
+.download-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.download-item-name {
+    font-weight: 500;
+    flex: 1;
+    margin-right: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.download-item-progress {
+    background: #eee;
+    height: 4px;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.download-item-progress-bar {
+    height: 100%;
+    background: var(--primary-color);
+    transition: width 0.3s ease;
+}
+
+.download-item-status {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-top: 4px;
+}
+
+.download-item-cancel {
+    background: none;
+    border: none;
+    color: var(--text-light);
+    padding: 4px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.download-item-cancel:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--accent-color);
+}
+
+.download-cancel-all {
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-right: 10px;
+}
+
+.download-cancel-all:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* ส่วนที่แก้ไขสำหรับ Mobile View */
 @media (max-width: 768px) {
     .menu-toggle {
         display: block;
@@ -275,10 +656,8 @@ nav a i {
         display: none;
         flex-direction: column;
         width: 100%;
-        justify-content: flex-start; /* ใน mobile ให้กลับมาแสดงแบบปกติ */
-
     }
-
+    
     .nav-links #loginLink,
     .nav-links #logoutLink {
         margin-left: 0;
@@ -295,21 +674,282 @@ nav a i {
     
     .nav-container {
         flex-direction: column;
-        padding: 0px;
+        padding: 0;
     }
 
     .header h1 {
         font-size: 2rem;
     }
 
+    .file-list-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .header-left {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .header-left h2 {
+        width: 100%;
+    }
+
+    .folder-select {
+        flex: 1;
+        min-width: 0;
+        margin: 0;
+    }
+
+    /* Make the options container flex for mobile */
+    .select-container {
+        display: flex;
+        gap: 10px;
+        width: 100%;
+    }
+
+    /* Ensure proper spacing and sizing */
+    #folderSelect,
+    #typeSelect {
+        min-width: 0;
+        width: auto;
+        flex: 1;
+    }
+
+    .search-container {
+        width: 100%;
+        max-width: none;
+    }
+
+    .file-list-description {
+        display: none;
+    }
+
     .file-item {
         flex-direction: column;
         align-items: flex-start;
+        gap: 8px;
+        padding: 15px;
+        position: relative;
     }
 
-    .file-link {
+    .file-name,
+    .file-origin,
+    .file-date,
+    .file-size {
+        width: 100%;
+        text-align: left;
+        padding: 2px 0;
+        font-size: 0.9rem;
+    }
+
+    .file-view,
+    .file-download-table {
+        position: absolute;
+        bottom: 15px;
+        right: 15px;
+        width: auto;
+        margin: 0;
+        padding: 0;
+    }
+
+    .file-link,
+    .file-download {
+        margin: 0;
+        padding: 5px 10px;
+        font-size: 0.8rem;
+        width: auto;
+    }
+
+    .file-icon {
+        margin-right: 10px;
+        font-size: 1rem;
+    }
+
+    /* เพิ่มสไตล์สำหรับข้อมูลแต่ละประเภท */
+    .file-origin::before {
+        content: "Folder: ";
+        font-weight: bold;
+        color: var(--text-color);
+    }
+
+    .file-date::before {
+        content: "Date: ";
+        font-weight: bold;
+        color: var(--text-color);
+    }
+
+    .file-size::before {
+        content: "Size: ";
+        font-weight: bold;
+        color: var(--text-color);
+    }
+
+    /* สไตล์สำหรับ Action buttons */
+    .file-actions-mobile {
+        display: flex;
+        gap: 8px;
         margin-top: 10px;
-        align-self: flex-end;
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .file-item {
+        display: flex;
+        flex-direction: column;
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        gap: 8px;
+    }
+
+    .file-name {
+        width: 100%;
+        font-size: 1rem;
+        font-weight: 500;
+        margin-bottom: 5px;
+    }
+
+    .file-origin,
+    .file-date,
+    .file-size {
+        width: 100%;
+        font-size: 0.85rem;
+        color: var(--text-light);
+        display: flex;
+        align-items: center;
+    }
+
+    .file-icon {
+        margin-right: 10px;
+        font-size: 1rem;
+    }
+
+    /* Labels for mobile view */
+    .file-origin::before {
+        content: "Folder: ";
+        font-weight: 500;
+        width: 80px;
+        color: var(--text-color);
+    }
+
+    .file-date::before {
+        content: "Date: ";
+        font-weight: 500;
+        width: 80px;
+        color: var(--text-color);
+    }
+
+    .file-size::before {
+        content: "Size: ";
+        font-weight: 500;
+        width: 80px;
+        color: var(--text-color);
+    }
+
+    .file-actions-mobile {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #eee;
+    }
+
+    .file-view,
+    .file-download-table {
+        width: auto;
+        text-align: center;
+    }
+
+    .file-link,
+    .file-download {
+        margin: 0;
+        padding: 6px 12px;
+        font-size: 0.9rem;
+        width: auto;
+        min-width: 90px;
+    }
+
+    .file-item {
+        display: flex;
+        flex-direction: column;
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        gap: 12px;
+    }
+
+    .file-name,
+    .file-origin,
+    .file-date,
+    .file-size {
+        display: flex;
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    .file-name::before,
+    .file-origin::before,
+    .file-date::before,
+    .file-size::before {
+        content: attr(data-label);
+        min-width: 100px;
+        font-weight: 500;
+        color: var(--text-color);
+    }
+
+    .file-actions-mobile {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #eee;
+    }
+
+    .file-link,
+    .file-download {
+        min-width: 120px;
+        justify-content: center;
+    }
+
+    .download-prompt {
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+        min-width: unset;
+        max-width: unset;
+        width: auto;
+    }
+
+    .download-header {
+        padding: 8px 12px;
+    }
+
+    .download-title {
+        font-size: 0.9rem;
+    }
+
+    .download-content {
+        padding: 12px;
+        max-height: 250px;
+    }
+
+    .minimized {
+        width: auto;
+        min-width: unset;
+    }
+
+    .file-progress {
+        font-size: 0.85rem;
+    }
+
+    .download-prompt.minimized {
+        max-width: unset;
+        width: auto;
     }
 }
 
@@ -327,6 +967,7 @@ nav a i {
     }
     
     .file-list {
-        padding: 15px;
+        border-radius: 0;
     }
 }
+

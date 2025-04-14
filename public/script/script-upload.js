@@ -22,8 +22,14 @@ const successMessage = document.getElementById('successMessage');
 const errorMessage = document.getElementById('errorMessage');
 const menuToggle = document.getElementById('menuToggle');
 const navLinks = document.getElementById('navLinks');
+const signOutBtn = document.getElementById('signOutBtn');
+const createFolderBtn = document.getElementById('createFolderBtn');
 
-const signOutBtn = document.getElementById('signOutBtn'); // Update to get the button from HTML
+let selectedFolderId = null;
+const folderPromptModal = document.getElementById('folderPrompt');
+const folderList = document.getElementById('folderList');
+const cancelFolderSelect = document.getElementById('cancelFolderSelect');
+const confirmFolderSelect = document.getElementById('confirmFolderSelect');
 
 // Files to upload
 let filesToUpload = [];
@@ -77,7 +83,7 @@ function gisInit() {
 // Check if both GAPI and GIS are initialized
 function maybeEnableButtons() {
     if (gapiInited && gisInited) {
-        authBtn.style.display = 'block'; // Ensure the button is visible
+        authBtn.style.display = 'block';
         authBtn.disabled = false;
     }
 }
@@ -102,9 +108,9 @@ function handleAuthClick() {
 // Handle sign-out
 function handleSignOutClick() {
     console.log('Sign-out button clicked.');
-    sessionStorage.removeItem('access_token'); // Clear token from sessionStorage
-    localStorage.removeItem('access_token'); // Clear token from localStorage
-    gapi.client.setToken(null); // Clear token from Google API client
+    sessionStorage.removeItem('access_token');
+    localStorage.removeItem('access_token');
+    gapi.client.setToken(null);
     authBtn.style.display = 'block';
     signOutBtn.style.display = 'none';
     uploadBtn.disabled = true;
@@ -114,14 +120,18 @@ function handleSignOutClick() {
 // Check if we have access to the target folder
 async function checkFolderAccess() {
     try {
-        if (!gapi.client || !gapi.client.drive) {
-            throw new Error('Google API client is not initialized.');
-        }
-        const response = await gapi.client.drive.files.get({
-            fileId: FOLDER_ID,
-            fields: 'name',
+        const response = await fetch(`/api/folders?parentId=${FOLDER_ID}`, {
+            headers: {
+                'Authorization': `Bearer ${gapi.client.getToken().access_token}`
+            }
         });
-        console.log('Folder accessible:', response.result.name);
+        
+        if (!response.ok) {
+            throw new Error('Failed to access folder');
+        }
+        
+        const data = await response.json();
+        console.log('Folder accessible:', data.length, 'subfolders found');
     } catch (error) {
         console.error('Error accessing folder:', error);
         showError('Select the file you want to upload.');
@@ -130,12 +140,15 @@ async function checkFolderAccess() {
 
 // Handle file selection via button
 selectFilesBtn.addEventListener('click', () => {
+    fileInput.value = '';
     fileInput.click();
 });
 
 // Handle file selection change
 fileInput.addEventListener('change', (e) => {
-    handleFiles(e.target.files);
+    if (e.target.files.length > 0) {
+        handleFiles(e.target.files);
+    }
 });
 
 // Handle drag and drop events
@@ -146,7 +159,7 @@ fileInput.addEventListener('change', (e) => {
 function preventDefaults(e) {
     e.preventDefault();
     e.stopPropagation();
-};
+}
 
 ['dragenter', 'dragover'].forEach(eventName => {
     dropArea.addEventListener(eventName, highlight, false);
@@ -172,12 +185,23 @@ dropArea.addEventListener('drop', (e) => {
 });
 
 // Process selected files
-function handleFiles(files) {
-    filesToUpload = Array.from(files);
+async function handleFiles(files) {
+    const newFiles = Array.from(files);
+    filesToUpload = [...filesToUpload, ...newFiles];
     updateFileList();
+    
     if (gapi.client.getToken() !== null) {
         uploadBtn.disabled = filesToUpload.length === 0;
     }
+
+    // Store files in sessionStorage for persistence
+    sessionStorage.setItem('pendingUploads', JSON.stringify(
+        filesToUpload.map(f => ({
+            name: f.name,
+            size: f.size,
+            type: f.type
+        }))
+    ));
 }
 
 // Update the file list display
@@ -238,48 +262,220 @@ function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-// Handle file upload to Google Drive
+// Custom folder prompt function
+function showFolderPrompt(message, callback) {
+    const promptBox = document.createElement('div');
+    promptBox.className = 'folder-prompt';
+    promptBox.innerHTML = `
+        <div class="prompt-content">
+            <h3>${message || 'Enter folder name:'}</h3>
+            <div class="input-container">
+                <input type="text" class="folder-input" placeholder="Folder name" autocomplete="off" id="folderNameInput">
+                <div id="folderNameError" class="error-prompt" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i> <span>Please enter name</span>
+                </div>
+            </div>
+            <div class="prompt-buttons">
+                <button class="btn btn-cancel cancel-btn">Cancel</button>
+                <button class="btn confirm-btn">Create</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(promptBox);
+    
+    const input = document.getElementById('folderNameInput');
+    const errorMsg = document.getElementById('folderNameError');
+    const cancelBtn = promptBox.querySelector('.cancel-btn');
+    const confirmBtn = promptBox.querySelector('.confirm-btn');
+    
+    input.focus();
+    
+    const cleanUp = () => {
+        document.body.removeChild(promptBox);
+    };
+    
+    const handleConfirm = () => {
+        const folderName = input.value.trim();
+        if (folderName) {
+            callback(folderName);
+            cleanUp();
+        } else {
+            errorMsg.style.display = 'flex';
+            input.classList.add('invalid-input');
+        }
+    };
+    
+    const handleCancel = () => {
+        callback(null);
+        cleanUp();
+    };
+    
+    cancelBtn.addEventListener('click', handleCancel);
+    confirmBtn.addEventListener('click', handleConfirm);
+    
+    input.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') {
+            handleConfirm();
+        } else if (e.key === 'Escape') {
+            handleCancel();
+        }
+    });
+    
+    promptBox.addEventListener('click', (e) => {
+        if (e.target === promptBox) {
+            handleCancel();
+        }
+    });
+
+    input.addEventListener('input', () => {
+        if (input.value.trim()) {
+            errorMsg.style.display = 'none';
+            input.classList.remove('invalid-input');
+        }
+    });
+}
+
+// Handle folder creation
+createFolderBtn.addEventListener('click', () => {
+    showFolderPrompt('Enter folder name:', async (folderName) => {
+        if (!folderName) return;
+
+        try {
+            const response = await fetch('/api/folders', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${gapi.client.getToken().access_token}`
+                },
+                body: JSON.stringify({
+                    name: folderName,
+                    parentId: selectedFolderId || FOLDER_ID
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to create folder: ${response.statusText}`);
+            }
+
+            const newFolder = await response.json();
+            showSuccess(`Folder "${newFolder.name}" created successfully`);
+            
+            await listFolders(selectedFolderId || FOLDER_ID);
+            
+            const newFolderElement = Array.from(folderList.children)
+                .find(el => el.querySelector('.folder-name').textContent === newFolder.name);
+            if (newFolderElement) {
+                selectFolder(newFolder.id, newFolderElement);
+            }
+        } catch (error) {
+            console.error('Error creating folder:', error);
+            showError('Failed to create folder');
+        }
+    });
+});
+
+// Handle upload button click
 uploadBtn.addEventListener('click', async () => {
     if (filesToUpload.length === 0) {
         showError('Please select at least one file to upload.');
         return;
     }
 
-    clearMessages();
-    uploadBtn.disabled = true;
-    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
-
-    let successCount = 0;
-    const errorFiles = [];
-
-    for (const file of filesToUpload) {
-        try {
-            await uploadFileToDrive(file);
-            successCount++;
-        } catch {
-            errorFiles.push(file.name);
-        }
-    }
-
-    // Show upload results
-    if (errorFiles.length === 0) {
-        showSuccess(`Successfully uploaded ${successCount} file(s) to Google Drive!`);
-        filesToUpload = [];
-        fileList.innerHTML = '';
-    } else {
-        showError(`Uploaded ${successCount} file(s). Failed to upload: ${errorFiles.join(', ')}`);
-    }
-
-    uploadBtn.disabled = false;
-    uploadBtn.innerHTML = 'Upload to Google Drive';
+    folderPromptModal.style.display = 'block';
+    selectedFolderId = null;
+    confirmFolderSelect.disabled = true;
+    await listFolders(FOLDER_ID);
 });
 
-// Upload a single file to Google Drive
-async function uploadFileToDrive(file) {
+// Folder prompt event listeners
+cancelFolderSelect.addEventListener('click', () => {
+    folderPromptModal.style.display = 'none';
+});
+
+confirmFolderSelect.addEventListener('click', async () => {
+    if (!selectedFolderId) return;
+    
+    folderPromptModal.style.display = 'none';
+    clearMessages();
+
+    // Check if there's an ongoing upload
+    const currentUploadId = sessionStorage.getItem('currentUploadId');
+    
+    try {
+        const formData = new FormData();
+        filesToUpload.forEach(file => {
+            formData.append('files', file);
+        });
+        formData.append('folderId', selectedFolderId);
+
+        let response;
+        if (currentUploadId) {
+            response = await fetch(`/add-files/${currentUploadId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${gapi.client.getToken().access_token}`
+                },
+                body: formData
+            });
+        } else {
+            response = await fetch('/start-upload', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${gapi.client.getToken().access_token}`
+                },
+                body: formData
+            });
+
+            if (response.ok) {
+                const { uploadId } = await response.json();
+                sessionStorage.setItem('currentUploadId', uploadId);
+            }
+        }
+
+        if (!response.ok) {
+            throw new Error(await response.text() || 'Upload failed');
+        }
+
+        // Clear files immediately after successful upload initiation
+        filesToUpload = [];
+        updateFileList();
+        uploadBtn.disabled = true;
+        dropArea.innerHTML = `
+            <div class="upload-icon">
+                <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <h3>Drag & Drop files here</h3>
+            <p>or</p>
+            <button class="btn" id="selectFiles">Select Files</button>
+        `;
+        
+        // Re-attach event listener to new selectFiles button
+        document.getElementById('selectFiles').addEventListener('click', () => {
+            fileInput.value = '';
+            fileInput.click();
+        });
+
+        if (!currentUploadId) {
+            showUploadPrompt('Starting upload...');
+            startUploadProgressPolling();
+        }
+
+        showSuccess('Files added to upload queue');
+
+    } catch (error) {
+        console.error('Upload error:', error);
+        showError(error.message || 'Failed to upload files');
+        uploadBtn.disabled = false;
+    }
+});
+
+// Upload file to Google Drive
+async function uploadFileToDrive(file, folderId) {
     const metadata = {
         name: file.name,
         mimeType: file.type,
-        parents: [FOLDER_ID],
+        parents: [folderId],
     };
 
     const form = new FormData();
@@ -302,6 +498,88 @@ async function uploadFileToDrive(file) {
     }
 }
 
+// List folders in Google Drive using our backend API
+async function listFolders(parentId) {
+    try {
+        folderList.innerHTML = '<div class="folder-item loading"><i class="fas fa-spinner fa-spin"></i> Loading folders...</div>';
+        
+        const response = await fetch(`/api/folders?parentId=${parentId}`, {
+            headers: {
+                'Authorization': `Bearer ${gapi.client.getToken().access_token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch folders: ${response.statusText}`);
+        }
+        
+        const folders = await response.json();
+        folderList.innerHTML = '';
+
+        // Add back button if not in root folder
+        if (parentId !== FOLDER_ID) {
+            const backButton = document.createElement('div');
+            backButton.className = 'folder-item';
+            backButton.innerHTML = '<i class="fas fa-arrow-left"></i> Back';
+            backButton.onclick = async () => {
+                await listFolders(FOLDER_ID);
+            };
+            folderList.appendChild(backButton);
+        } else {
+            // Only show root folder option when in root directory
+            const rootFolder = document.createElement('div');
+            rootFolder.className = 'folder-item';
+            rootFolder.innerHTML = '<i class="fas fa-folder"></i> Default folder';
+            rootFolder.onclick = () => selectFolder(FOLDER_ID, rootFolder);
+            folderList.appendChild(rootFolder);
+        }
+
+        // Add all subfolders
+        folders.forEach(folder => {
+            const folderElement = document.createElement('div');
+            folderElement.className = 'folder-item';
+            folderElement.innerHTML = `
+                <i class="fas fa-folder"></i> 
+                <span class="folder-name">${folder.name}</span>
+                <i class="fas fa-chevron-right folder-nav" style="margin-left: auto;"></i>
+            `;
+            
+            // Make the entire folder element clickable to select
+            folderElement.onclick = (e) => {
+                // Don't select if clicking on the chevron
+                if (!e.target.classList.contains('folder-nav')) {
+                    selectFolder(folder.id, folderElement);
+                }
+            };
+            
+            // Make chevron icon clickable to navigate
+            const chevron = folderElement.querySelector('.folder-nav');
+            chevron.onclick = (e) => {
+                e.stopPropagation(); // Prevent the folder selection from happening
+                listFolders(folder.id);
+            };
+            
+            folderList.appendChild(folderElement);
+        });
+
+        return folders;
+    } catch (error) {
+        console.error('Error listing folders:', error);
+        showError('Failed to load folders');
+        return [];
+    }
+}
+
+// Select a folder
+function selectFolder(folderId, element) {
+    document.querySelectorAll('.folder-item').forEach(item => {
+        item.classList.remove('selected');
+    });
+    element.classList.add('selected');
+    selectedFolderId = folderId;
+    confirmFolderSelect.disabled = false;
+}
+
 // Show success message
 function showSuccess(message) {
     successMessage.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
@@ -314,7 +592,7 @@ function showError(message) {
     errorMessage.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
     errorMessage.style.display = 'block';
     successMessage.style.display = 'none';
-};
+}
 
 // Clear all messages
 function clearMessages() {
@@ -327,6 +605,7 @@ menuToggle.addEventListener('click', function() {
     navLinks.classList.toggle('active');
 });
 
+// Fetch environment variables
 async function fetchEnvVariables() {
     try {
         const response = await fetch('/env');
@@ -341,6 +620,7 @@ async function fetchEnvVariables() {
     }
 }
 
+// Initialize the application
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         console.log('Fetching environment variables...');
@@ -355,52 +635,43 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         console.log('Environment variables loaded:', { API_KEY, CLIENT_ID, FOLDER_ID });
 
-        // Initialize the Google API client
         console.log('Loading Google API client...');
         gapi.load('client', async () => {
-            await initializeGapiClient(); // Ensure gapi.client is initialized
+            await initializeGapiClient();
             gisInit();
 
-            // Restore token from localStorage
             const savedToken = localStorage.getItem('access_token');
             if (savedToken) {
                 console.log('Restoring access token from localStorage...');
                 gapi.client.setToken({ access_token: savedToken });
 
-                // Wait for gapi.client to fully initialize before proceeding
                 gapi.client.load('drive', 'v3', () => {
                     console.log('Google Drive API loaded.');
                     authBtn.style.display = 'none';
-                    signOutBtn.style.display = 'block'; // Show sign-out button
+                    signOutBtn.style.display = 'block';
                     uploadBtn.disabled = filesToUpload.length === 0;
-
-                    // Call checkFolderAccess only after gapi.client is initialized
                     checkFolderAccess();
                 });
             } else {
                 console.log('No saved token found. User needs to sign in.');
             }
         });
-        signOutBtn.addEventListener('click', handleSignOutClick); // Bind sign-out button to click event
+        signOutBtn.addEventListener('click', handleSignOutClick);
     } catch (error) {
         console.error('Failed to initialize application:', error);
         showError('Please login before use.');
     }
 });
 
-// Ensure the auth button is bound to the click event
 authBtn.addEventListener('click', handleAuthClick);
 
-
-
-// ตรวจสอบสถานะการล็อกอินเมื่อโหลดหน้า
+// Check login status
 document.addEventListener('DOMContentLoaded', function() {
     const isLoggedIn = localStorage.getItem('username') ? true : false;
     updateNavLinks(isLoggedIn);
-    fetchDailyVisitors();
 });
 
-// อัพเดทการแสดงผลของลิงก์ Login/Logout
+// Update navigation links based on login status
 function updateNavLinks(isLoggedIn) {
     const loginLink = document.getElementById('loginLink');
     const logoutLink = document.getElementById('logoutLink');
@@ -415,3 +686,147 @@ function updateNavLinks(isLoggedIn) {
         logoutLink.style.display = 'none';
     }
 }
+
+// Show upload prompt
+function showUploadPrompt(message = null, progress = 0, isComplete = false) {
+    let promptBox = document.getElementById('uploadPrompt');
+    const wasMinimized = promptBox?.classList.contains('minimized');
+    
+    if (!promptBox) {
+        promptBox = document.createElement('div');
+        promptBox.id = 'uploadPrompt';
+        promptBox.className = 'upload-prompt';
+        document.body.appendChild(promptBox);
+    }
+
+    promptBox.innerHTML = `
+        <div class="upload-header">
+            <span class="upload-title">Uploading Files${progress ? ` (${progress}%)` : ''}</span>
+            <div class="upload-buttons">
+                <button class="upload-button minimize-btn">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <button class="upload-button cancel-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="upload-content">
+            <div class="spinner"></div>
+            <p>${message || 'Uploading files...'}</p>
+            <div class="progress-bar">
+                <div class="progress" style="width: ${progress}%"></div>
+            </div>
+            <div id="uploadFileList"></div>
+        </div>
+    `;
+
+    promptBox.querySelector('.minimize-btn').addEventListener('click', () => {
+        promptBox.classList.toggle('minimized');
+    });
+
+    promptBox.querySelector('.cancel-btn').addEventListener('click', async () => {
+        const uploadId = sessionStorage.getItem('currentUploadId');
+        if (uploadId) {
+            try {
+                const response = await fetch(`/cancel-upload/${uploadId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${gapi.client.getToken().access_token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to cancel upload');
+                }
+
+                showError('Upload cancelled');
+                cleanupAfterUpload();
+                promptBox.remove();
+            } catch (error) {
+                console.error('Error cancelling upload:', error);
+            }
+        }
+        sessionStorage.removeItem('currentUploadId');
+    });
+
+    if (wasMinimized) {
+        promptBox.classList.add('minimized');
+    }
+
+    if (isComplete) {
+        setTimeout(() => {
+            promptBox.remove();
+        }, 2000);
+    }
+
+    return promptBox;
+}
+
+// Update file list in upload prompt
+function updateUploadFileList(files, progress) {
+    const fileList = document.getElementById('uploadFileList');
+    if (!fileList) return;
+
+    fileList.innerHTML = files.map(file => `
+        <div class="upload-file-progress">
+            <i class="fas fa-file"></i>
+            <span class="upload-file-name">${file.name}</span>
+            <span class="upload-file-percent">${file.progress}%</span>
+        </div>
+    `).join('');
+}
+
+// Poll upload progress
+function startUploadProgressPolling() {
+    const uploadId = sessionStorage.getItem('currentUploadId');
+    if (!uploadId) return;
+
+    const pollInterval = setInterval(async () => {
+        try {
+            const response = await fetch(`/upload-progress/${uploadId}`);
+            const data = await response.json();
+
+            if (data.error) {
+                showUploadPrompt(data.error, 0, true);
+                clearInterval(pollInterval);
+                cleanupAfterUpload();
+                return;
+            }
+
+            if (data.completed) {
+                showUploadPrompt('Upload completed!', 100, true);
+                clearInterval(pollInterval);
+                cleanupAfterUpload();
+                return;
+            }
+
+            showUploadPrompt(null, data.progress);
+            if (data.files) {
+                updateUploadFileList(data.files);
+            }
+        } catch (error) {
+            console.error('Error polling upload progress:', error);
+            showError('Error checking upload progress');
+            clearInterval(pollInterval);
+        }
+    }, 1000);
+}
+
+// เพิ่มฟังก์ชันใหม่สำหรับการทำความสะอาดหลังอัปโหลด
+function cleanupAfterUpload() {
+    sessionStorage.removeItem('currentUploadId');
+    filesToUpload = [];
+    updateFileList();
+    uploadBtn.disabled = false;
+    uploadBtn.innerHTML = 'Upload to Google Drive';
+}
+
+// Check for ongoing uploads on page load
+document.addEventListener('DOMContentLoaded', () => {
+    const uploadId = sessionStorage.getItem('currentUploadId');
+    if (uploadId) {
+        showUploadPrompt();
+        startUploadProgressPolling();
+    }
+});

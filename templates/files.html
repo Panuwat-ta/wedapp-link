@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/styles/styles-files.css">
     <script src="/script/script-files.js" defer></script>
-
 </head>
 <body>
     <nav>
@@ -21,7 +20,7 @@
                 <a href="./date.html"><i class="fas fa-calendar-alt"></i> Update</a>
                 <a href="./upload.html"><i class="fas fa-cloud-upload-alt"></i> Upload</a>
                 <a href="./about.html"><i class="fas fa-info-circle"></i> About</a>
-                <a href="./suport.html"><i class="fas fa-hand-holding-heart"></i> Suport</a>
+                <a href="./suport.html"><i class="fas fa-hand-holding-heart"></i> Support</a>
                 <a href="./login.html" id="loginLink"><i class="fas fa-sign-in-alt"></i> Login</a>
                 <a href="./logout.html" id="logoutLink" style="display: none;"><i class="fas fa-user"></i> Profile</a>
             </div>
@@ -36,18 +35,60 @@
     <div class="container">
         <div class="file-list">
             <div class="file-list-header">
-                <h2><i class="fas fa-file-alt"></i> Shared Documents</h2>
+                <div class="header-left">
+                    <h2><i class="fas fa-file-alt"></i> Shared Documents</h2>
+                    <div class="select-container">
+                        <select id="folderSelect" class="folder-select">
+                            <option value="all">All Files</option>
+                        </select>
+                        <select id="typeSelect" class="folder-select">
+                            <option value="files">Files</option>
+                            <option value="folders">Folders</option>
+                            <option value="all">All Types</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="search-container">
+                    <input type="text" id="searchBox" class="search-box" placeholder="Search..." oninput="filterFiles()">
+                </div>
+                <div class="view-toggle">
+                    <button id="listViewBtn" title="List view" class="active">
+                        <i class="fas fa-list"></i>
+                    </button>
+                    <button id="gridViewBtn" title="Grid view">
+                        <i class="fas fa-th-large"></i>
+                    </button>
+                </div>
                 <span class="file-count" id="fileCount">Loading...</span>
             </div>
-            <div id="fileList">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>Loading files...</p>
+            
+            <!-- List View -->
+            <div class="file-list-description">
+                <div class="file-name"><strong>File Name</strong></div>
+                <div class="file-origin"><strong>Folder</strong></div>
+                <div class="file-date"><strong>Upload Date</strong></div>
+                <div class="file-size"><strong>Size</strong></div>
+                <div class="file-view"><strong>View</strong></div>
+                <div class="file-download-table"><strong>Download</strong></div>
+            </div>
+                
+                <div id="fileList">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Loading files...</p>
+                    </div>
                 </div>
             </div>
-            <!-- Note: Each file will now include a download button -->
+            
+            <!-- Grid View -->
+            <div id="gridView" class="grid-view">
+                <div class="grid-container" id="gridContainer"></div>
+            </div>
         </div>
     </div>
+
     <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script src="https://accounts.google.com/gsi/client"></script>
 </body>
 </html>
