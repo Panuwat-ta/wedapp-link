@@ -307,12 +307,12 @@ app.post('/login', async (req, res) => {
     const user = await usersCollection.findOne({ username });
 
     if (!user) {
-      return res.status(401).send('Invalid username or password');
+      return res.status(401).json('Invalid username or password');
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password); // Compare password using bcryptjs
     if (!passwordMatch) {
-      return res.status(401).send('Invalid username or password');
+      return res.status(401).json('Invalid username or password');
     }
 
     res.status(200).json({
