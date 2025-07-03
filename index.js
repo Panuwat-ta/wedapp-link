@@ -296,23 +296,23 @@ app.post('/register', async (req, res) => {
 
 // User login endpoint
 app.post('/login', async (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
-  if (!username || !password) {
+  if (!email || !password) {
     return res.status(400).send('กรุณากรอกข้อมูลให้ครบถ้วน');
   }
 
   try {
     const usersCollection = client.db("Link").collection("User");
-    const user = await usersCollection.findOne({ username });
+    const user = await usersCollection.findOne({ email });
 
     if (!user) {
-      return res.status(401).json('Invalid username or password');
+      return res.status(401).json('Invalid email or password');
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password); // Compare password using bcryptjs
     if (!passwordMatch) {
-      return res.status(401).json('Invalid username or password');
+      return res.status(401).json('Invalid email or password');
     }
 
     res.status(200).json({
@@ -350,13 +350,13 @@ app.get('/env', (req, res) => {
 // Route to fetch the current user's data
 app.get('/current-user', async (req, res) => {
     try {
-        const username = req.headers['x-username']; // รับ username จาก header
-        if (!username) {
-            return res.status(400).json({ error: 'กรุณาส่ง username ใน header' });
+        const email = req.headers['x-email']; // รับ email จาก header
+        if (!email) {
+            return res.status(400).json({ error: 'กรุณาส่ง email ใน header' });
         }
 
         const usersCollection = client.db("Link").collection("User");
-        const user = await usersCollection.findOne({ username });
+        const user = await usersCollection.findOne({ email });
 
         if (!user) {
             return res.status(404).json({ error: 'ไม่พบผู้ใช้ในฐานข้อมูล' });

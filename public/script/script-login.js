@@ -7,7 +7,7 @@ function alertBox(message, type = 'info') {
     }
     alertElement.textContent = message;
     alertElement.className = `alert-box ${type} show`;
-    
+
     // Hide after 5 seconds
     setTimeout(() => {
         alertElement.classList.remove('show');
@@ -27,7 +27,7 @@ function updateNavLinks(isLoggedIn) {
 }
 
 async function login() {
-    const username = document.getElementById('loginUsername').value.trim();
+    const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value.trim();
 
     try {
@@ -36,13 +36,15 @@ async function login() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ username, password }),
+            body: JSON.stringify({ email, password }),
         });
 
         if (response.ok) {
             const data = await response.json();
             alertBox('Login successful!', 'success');
-            localStorage.setItem('username', username); // เก็บ username ใน localStorage
+            // login สำเร็จ
+            localStorage.setItem('username', data.user.username); // เก็บ username ใน localStorage
+            localStorage.setItem('email', data.user.email);
             updateNavLinks(true); // Update navigation links
             window.location.href = "logout.html"; // Redirect to logout page
         } else {
@@ -216,6 +218,6 @@ async function resetPassword() {
 }
 
 // Mobile menu toggle
-document.getElementById('menuToggle').addEventListener('click', function() {
+document.getElementById('menuToggle').addEventListener('click', function () {
     document.getElementById('navLinks').classList.toggle('active');
 });
