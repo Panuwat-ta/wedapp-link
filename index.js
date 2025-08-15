@@ -101,31 +101,34 @@ app.get('/logout.html', (req, res) => {
 // Route สำหรับส่งข้อมูล MongoDB
 app.get('/data', async (req, res) => {
   try {
-      const collection = client.db("Link").collection("link");
-      const data = await collection.aggregate([
-          {
-              $lookup: {
-                  from: "User",
-                  localField: "username",
-                  foreignField: "username",
-                  as: "user"
-              }
-          },
-          {
-              $addFields: {
-                  profileImage: { $arrayElemAt: ["$user.profileImage", 0] }
-              }
-          },
-          {
-              $project: {
-                  user: 0
-              }
-          }
-      ]).toArray();
-      res.json(data);
+    const collection = client.db("Link").collection("link");
+    const data = await collection.aggregate([
+      {
+        $lookup: {
+          from: "User",
+          localField: "username",
+          foreignField: "username",
+          as: "user"
+        }
+      },
+      {
+        $addFields: {
+          profileImage: { $arrayElemAt: ["$user.profileImage", 0] }
+        }
+      },
+      {
+        $project: {
+          user: 0
+        }
+      },
+      {
+        $sort: { date: -1 } // เพิ่มบรรทัดนี้เพื่อเรียงวันที่ล่าสุดก่อน
+      }
+    ]).toArray();
+    res.json(data);
   } catch (error) {
-      console.error("Error fetching data:", error);
-      res.status(500).send("Error fetching data");
+    console.error("Error fetching data:", error);
+    res.status(500).send("Error fetching data");
   }
 });
 
@@ -139,15 +142,15 @@ app.post('/add-link', async (req, res) => {
   try {
     // ดึง username จาก header
     const username = req.headers['x-username'];
-    
+
     const collection = client.db("Link").collection("link");
-    await collection.insertOne({ 
-      url, 
-      name, 
+    await collection.insertOne({
+      url,
+      name,
       date,
       username: username || 'Anonymous' // ถ้าไม่มี username ให้ใช้ 'Anonymous'
     });
-    
+
     res.status(201).send('เพิ่มลิงก์สำเร็จ');
   } catch (error) {
     console.error("Error adding link:", error);
@@ -158,18 +161,18 @@ app.post('/add-link', async (req, res) => {
 // Route สำหรับนับจำนวนลิงก์ของผู้ใช้
 app.get('/user-links-count', async (req, res) => {
   const { username } = req.query;
-  
+
   if (!username) {
-      return res.status(400).json({ error: 'Username is required' });
+    return res.status(400).json({ error: 'Username is required' });
   }
 
   try {
-      const collection = client.db("Link").collection("link");
-      const count = await collection.countDocuments({ username });
-      res.json({ count });
+    const collection = client.db("Link").collection("link");
+    const count = await collection.countDocuments({ username });
+    res.json({ count });
   } catch (error) {
-      console.error("Error counting user links:", error);
-      res.status(500).json({ error: "Error counting user links" });
+    console.error("Error counting user links:", error);
+    res.status(500).json({ error: "Error counting user links" });
   }
 });
 
@@ -194,7 +197,7 @@ app.put('/edit-link/:id', async (req, res) => {
 
   try {
     const collection = client.db("Link").collection("link");
-    
+
     // ตรวจสอบว่า id ถูกต้องหรือไม่
     if (!ObjectId.isValid(id)) {
       console.log('Invalid ObjectId:', id);
@@ -261,7 +264,7 @@ app.post('/register', async (req, res) => {
 
   try {
     const usersCollection = client.db("Link").collection("User");
-    
+
     // Check if username or email already exists
     const existingUser = await usersCollection.findOne({
       $or: [
@@ -280,11 +283,11 @@ app.post('/register', async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10); // Hash password using bcryptjs
-    await usersCollection.insertOne({ 
-      username, 
-      email, 
-      password: hashedPassword, 
-      createdAt: new Date() 
+    await usersCollection.insertOne({
+      username,
+      email,
+      password: hashedPassword,
+      createdAt: new Date()
     });
 
     res.status(201).send('User registered successfully');
@@ -349,29 +352,29 @@ app.get('/env', (req, res) => {
 
 // Route to fetch the current user's data
 app.get('/current-user', async (req, res) => {
-    try {
-        const email = req.headers['x-email']; // รับ email จาก header
-        if (!email) {
-            return res.status(400).json({ error: 'กรุณาส่ง email ใน header' });
-        }
-
-        const usersCollection = client.db("Link").collection("User");
-        const user = await usersCollection.findOne({ email });
-
-        if (!user) {
-            return res.status(404).json({ error: 'ไม่พบผู้ใช้ในฐานข้อมูล' });
-        }
-
-        // ส่งข้อมูล username, email และ profileImage กลับไปยัง client
-        res.status(200).json({ 
-            username: user.username, 
-            email: user.email,
-            profileImage: user.profileImage || '/img/b1.jpg' // ส่งรูปเริ่มต้นถ้าไม่มี profileImage
-        });
-    } catch (error) {
-        console.error('เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้:', error);
-        res.status(500).json({ error: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์' });
+  try {
+    const email = req.headers['x-email']; // รับ email จาก header
+    if (!email) {
+      return res.status(400).json({ error: 'กรุณาส่ง email ใน header' });
     }
+
+    const usersCollection = client.db("Link").collection("User");
+    const user = await usersCollection.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ error: 'ไม่พบผู้ใช้ในฐานข้อมูล' });
+    }
+
+    // ส่งข้อมูล username, email และ profileImage กลับไปยัง client
+    res.status(200).json({
+      username: user.username,
+      email: user.email,
+      profileImage: user.profileImage || '/img/b1.jpg' // ส่งรูปเริ่มต้นถ้าไม่มี profileImage
+    });
+  } catch (error) {
+    console.error('เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้:', error);
+    res.status(500).json({ error: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์' });
+  }
 });
 
 // Route for checking user credentials for password reset
@@ -380,7 +383,7 @@ app.post('/check-reset-credentials', async (req, res) => {
   try {
     const usersCollection = client.db("Link").collection("User");
     const user = await usersCollection.findOne({ username, email });
-    
+
     if (user) {
       res.status(200).json({ valid: true });
     } else {
@@ -398,7 +401,7 @@ app.post('/reset-password', async (req, res) => {
   try {
     const usersCollection = client.db("Link").collection("User");
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    
+
     const result = await usersCollection.updateOne(
       { username, email },
       { $set: { password: hashedPassword } }
@@ -417,29 +420,29 @@ app.post('/reset-password', async (req, res) => {
 // Route สำหรับตรวจสอบรหัสผ่าน
 app.post('/verify-password', async (req, res) => {
   try {
-      const { password } = req.body;
-      const username = req.headers['x-username'];
+    const { password } = req.body;
+    const username = req.headers['x-username'];
 
-      if (!username || !password) {
-          return res.status(400).json({ message: 'Username and password are required' });
-      }
+    if (!username || !password) {
+      return res.status(400).json({ message: 'Username and password are required' });
+    }
 
-      const usersCollection = client.db("Link").collection("User");
-      const user = await usersCollection.findOne({ username });
+    const usersCollection = client.db("Link").collection("User");
+    const user = await usersCollection.findOne({ username });
 
-      if (!user) {
-          return res.status(404).json({ message: 'User not found' });
-      }
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
-      const passwordMatch = await bcrypt.compare(password, user.password);
-      if (!passwordMatch) {
-          return res.status(401).json({ message: 'Incorrect password' });
-      }
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      return res.status(401).json({ message: 'Incorrect password' });
+    }
 
-      res.status(200).json({ message: 'Password verified' });
+    res.status(200).json({ message: 'Password verified' });
   } catch (error) {
-      console.error('Error verifying password:', error);
-      res.status(500).json({ message: 'Error verifying password' });
+    console.error('Error verifying password:', error);
+    res.status(500).json({ message: 'Error verifying password' });
   }
 });
 
@@ -454,8 +457,8 @@ app.get('/check-username', async (req, res) => {
 
     const usersCollection = client.db("Link").collection("User");
     // ใช้ regex เพื่อตรวจสอบแบบไม่สนใจตัวพิมพ์เล็กใหญ่
-    const existingUser = await usersCollection.findOne({ 
-      username: { $regex: new RegExp(`^${username}$`, 'i') } 
+    const existingUser = await usersCollection.findOne({
+      username: { $regex: new RegExp(`^${username}$`, 'i') }
     });
 
     // ถ้าไม่พบผู้ใช้หรือเป็นผู้ใช้ปัจจุบัน ให้ถือว่าว่าง
@@ -481,8 +484,8 @@ app.get('/check-email', async (req, res) => {
 
     const usersCollection = client.db("Link").collection("User");
     // ใช้ regex เพื่อตรวจสอบแบบไม่สนใจตัวพิมพ์เล็กใหญ่
-    const existingUser = await usersCollection.findOne({ 
-      email: { $regex: new RegExp(`^${email}$`, 'i') } 
+    const existingUser = await usersCollection.findOne({
+      email: { $regex: new RegExp(`^${email}$`, 'i') }
     });
 
     // ถ้าไม่พบผู้ใช้หรือเป็นผู้ใช้ปัจจุบัน ให้ถือว่าว่าง
@@ -500,62 +503,62 @@ app.get('/check-email', async (req, res) => {
 
 // Route สำหรับอัปเดตโปรไฟล์ผู้ใช้
 app.post('/update-profile', async (req, res) => {
-    try {
-        const { username, email, profileImage } = req.body;
-        const currentUsername = req.headers['x-username'];
+  try {
+    const { username, email, profileImage } = req.body;
+    const currentUsername = req.headers['x-username'];
 
-        if (!username || !email) {
-            return res.status(400).json({ message: 'Username and email are required' });
-        }
-
-        const usersCollection = client.db("Link").collection("User");
-
-        // Check if username already exists (excluding current user)
-        if (username !== currentUsername) {
-            const existingUser = await usersCollection.findOne({
-                username: username
-            });
-
-            if (existingUser) {
-                return res.status(400).json({ message: 'Username already exists' });
-            }
-        }
-
-        // Update user profile including links collection
-        const userUpdateResult = await usersCollection.updateOne(
-            { username: currentUsername },
-            { 
-                $set: { 
-                    username: username,
-                    email: email,
-                    profileImage: profileImage || null,
-                    updatedAt: new Date()
-                }
-            }
-        );
-
-        // Update username in links collection
-        const linksCollection = client.db("Link").collection("link");
-        await linksCollection.updateMany(
-            { username: currentUsername },
-            { $set: { username: username } }
-        );
-
-        if (userUpdateResult.modifiedCount === 0) {
-            return res.status(404).json({ message: 'User not found or no changes made' });
-        }
-
-        res.status(200).json({ 
-            message: 'Profile updated successfully',
-            username: username,
-            email: email,
-            profileImage: profileImage
-        });
-
-    } catch (error) {
-        console.error('Error updating profile:', error);
-        res.status(500).json({ message: 'Error updating profile' });
+    if (!username || !email) {
+      return res.status(400).json({ message: 'Username and email are required' });
     }
+
+    const usersCollection = client.db("Link").collection("User");
+
+    // Check if username already exists (excluding current user)
+    if (username !== currentUsername) {
+      const existingUser = await usersCollection.findOne({
+        username: username
+      });
+
+      if (existingUser) {
+        return res.status(400).json({ message: 'Username already exists' });
+      }
+    }
+
+    // Update user profile including links collection
+    const userUpdateResult = await usersCollection.updateOne(
+      { username: currentUsername },
+      {
+        $set: {
+          username: username,
+          email: email,
+          profileImage: profileImage || null,
+          updatedAt: new Date()
+        }
+      }
+    );
+
+    // Update username in links collection
+    const linksCollection = client.db("Link").collection("link");
+    await linksCollection.updateMany(
+      { username: currentUsername },
+      { $set: { username: username } }
+    );
+
+    if (userUpdateResult.modifiedCount === 0) {
+      return res.status(404).json({ message: 'User not found or no changes made' });
+    }
+
+    res.status(200).json({
+      message: 'Profile updated successfully',
+      username: username,
+      email: email,
+      profileImage: profileImage
+    });
+
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ message: 'Error updating profile' });
+  }
 });
 
 // Helper function to get user IP
@@ -568,26 +571,26 @@ function getUserIP(req) {
 
 // Helper function to get current timestamp in Thailand timezone with 24-hour format
 function getThailandTimestamp() {
-  const options = { 
-    timeZone: "Asia/Bangkok", 
-    year: "numeric", 
-    month: "2-digit", 
-    day: "2-digit", 
-    hour: "2-digit", 
-    minute: "2-digit", 
-    second: "2-digit", 
-    hour12: false 
+  const options = {
+    timeZone: "Asia/Bangkok",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false
   };
   return new Date().toLocaleString("en-GB", options); // ใช้ en-GB เพื่อให้ได้รูปแบบวัน/เดือน/ปี
 }
 
 // Helper function to get today's date in Thailand timezone
 function getTodayDateThailand() {
-  const options = { 
-    timeZone: "Asia/Bangkok", 
-    year: "numeric", 
-    month: "2-digit", 
-    day: "2-digit" 
+  const options = {
+    timeZone: "Asia/Bangkok",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
   };
   return new Date().toLocaleDateString("en-GB", options); // ใช้ en-GB เพื่อให้ได้รูปแบบวัน/เดือน/ปี
 }
@@ -673,7 +676,7 @@ app.get('/download-folder/:folderId', async (req, res) => {
       const ext = fileName.lastIndexOf('.') > -1 ? fileName.substring(fileName.lastIndexOf('.')) : '';
       const baseName = fileName.lastIndexOf('.') > -1 ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName;
       const fullPath = `${path}${fileName}`;
-      
+
       if (!zip.files[fullPath]) {
         return fileName;
       }
@@ -689,7 +692,7 @@ app.get('/download-folder/:folderId', async (req, res) => {
             // สำหรับไฟล์ Google Docs/Sheets/Slides
             let exportMimeType;
             let exportExtension;
-            
+
             switch (mimeType) {
               case 'application/vnd.google-apps.document':
                 exportMimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
@@ -786,7 +789,7 @@ app.get('/download-folder/:folderId', async (req, res) => {
     }
 
     await getAllFilesInFolder(folderId);
-    
+
     // ตรวจสอบว่ามีไฟล์ในโฟลเดอร์หรือไม่
     if (Object.keys(zip.files).length === 0) {
       return res.status(404).send('No files found in folder or all files failed to download');
@@ -814,197 +817,197 @@ const activeDownloads = new Map();
 
 // Route to start folder download
 app.post('/start-folder-download', async (req, res) => {
-    const { folderId, folderName } = req.body;
-    const downloadId = Date.now().toString();
-    
-    activeDownloads.set(downloadId, {
-        folderId,
-        folderName,
-        progress: 0,
-        status: 'preparing',
-        isCancelled: false
-    });
-    
-    // Start processing in background
-    processDownload(downloadId).catch(console.error);
-    res.json({ downloadId });
+  const { folderId, folderName } = req.body;
+  const downloadId = Date.now().toString();
+
+  activeDownloads.set(downloadId, {
+    folderId,
+    folderName,
+    progress: 0,
+    status: 'preparing',
+    isCancelled: false
+  });
+
+  // Start processing in background
+  processDownload(downloadId).catch(console.error);
+  res.json({ downloadId });
 });
 
 // Route to get download progress
 app.get('/download-progress/:downloadId', (req, res) => {
-    const { downloadId } = req.params;
-    const download = activeDownloads.get(downloadId);
-    
-    if (!download) {
-        return res.json({ error: 'Download not found or expired' });
-    }
-    
-    if (download.isCancelled) {
-        activeDownloads.delete(downloadId);
-        return res.json({ error: 'Download cancelled' });
-    }
-    
-    res.json({
-        progress: download.progress,
-        status: download.status,
-        completed: download.status === 'completed',
-        downloadUrl: download.downloadUrl,
-        timestamp: download.timestamp
-    });
+  const { downloadId } = req.params;
+  const download = activeDownloads.get(downloadId);
+
+  if (!download) {
+    return res.json({ error: 'Download not found or expired' });
+  }
+
+  if (download.isCancelled) {
+    activeDownloads.delete(downloadId);
+    return res.json({ error: 'Download cancelled' });
+  }
+
+  res.json({
+    progress: download.progress,
+    status: download.status,
+    completed: download.status === 'completed',
+    downloadUrl: download.downloadUrl,
+    timestamp: download.timestamp
+  });
 });
 
 // Route to cancel download
 app.post('/cancel-download/:downloadId', (req, res) => {
-    const { downloadId } = req.params;
-    const download = activeDownloads.get(downloadId);
-    
-    if (download) {
-        download.isCancelled = true;
-    }
-    
-    res.sendStatus(200);
+  const { downloadId } = req.params;
+  const download = activeDownloads.get(downloadId);
+
+  if (download) {
+    download.isCancelled = true;
+  }
+
+  res.sendStatus(200);
 });
 
 // Process download in background
 async function processDownload(downloadId) {
-    const download = activeDownloads.get(downloadId);
-    if (!download || download.isCancelled) return;
+  const download = activeDownloads.get(downloadId);
+  if (!download || download.isCancelled) return;
 
-    try {
-        const apiKey = process.env.API_KEY;
-        const zip = new JSZip();
-        let processedFiles = 0;
-        let totalFiles = 0;
-        const fileNameCounter = new Map(); // Track duplicate filenames
+  try {
+    const apiKey = process.env.API_KEY;
+    const zip = new JSZip();
+    let processedFiles = 0;
+    let totalFiles = 0;
+    const fileNameCounter = new Map(); // Track duplicate filenames
 
-        // Helper function to get unique filename
-        function getUniqueFileName(originalName, path) {
-            const fullPath = path + originalName;
-            if (!fileNameCounter.has(fullPath)) {
-                fileNameCounter.set(fullPath, 1);
-                return originalName;
-            }
+    // Helper function to get unique filename
+    function getUniqueFileName(originalName, path) {
+      const fullPath = path + originalName;
+      if (!fileNameCounter.has(fullPath)) {
+        fileNameCounter.set(fullPath, 1);
+        return originalName;
+      }
 
-            const count = fileNameCounter.get(fullPath);
-            fileNameCounter.set(fullPath, count + 1);
-            
-            const ext = originalName.lastIndexOf('.') > -1 ? 
-                originalName.substring(originalName.lastIndexOf('.')) : '';
-            const baseName = originalName.lastIndexOf('.') > -1 ? 
-                originalName.substring(0, originalName.lastIndexOf('.')) : originalName;
-            
-            return `${baseName} (${count})${ext}`;
-        }
+      const count = fileNameCounter.get(fullPath);
+      fileNameCounter.set(fullPath, count + 1);
 
-        // Helper function to count total files in a folder
-        async function countFiles(folderId) {
-            try {
-                const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents&fields=files(id,mimeType)&key=${apiKey}`;
-                const response = await fetch(url);
-                if (!response.ok) throw new Error('Failed to fetch folder contents');
-                const data = await response.json();
-                
-                let count = data.files.length;
-                for (const file of data.files) {
-                    if (file.mimeType === 'application/vnd.google-apps.folder') {
-                        count += await countFiles(file.id);
-                    }
-                }
-                return count;
-            } catch (error) {
-                console.error('Error counting files:', error);
-                return 0;
-            }
-        }
+      const ext = originalName.lastIndexOf('.') > -1 ?
+        originalName.substring(originalName.lastIndexOf('.')) : '';
+      const baseName = originalName.lastIndexOf('.') > -1 ?
+        originalName.substring(0, originalName.lastIndexOf('.')) : originalName;
 
-        // Count total files first
-        totalFiles = await countFiles(download.folderId);
-        if (totalFiles === 0) {
-            throw new Error('No files found in folder');
-        }
-
-        // Update status to downloading
-        download.status = 'downloading';
-        download.totalFiles = totalFiles;
-
-        // Use existing getAllFilesInFolder function but modified for progress tracking
-        async function processFolder(folderId, path = '') {
-            if (download.isCancelled) return;
-
-            try {
-                const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents&fields=files(id,name,mimeType)&key=${apiKey}`;
-                const response = await fetch(url);
-                if (!response.ok) throw new Error('Failed to fetch folder contents');
-                const data = await response.json();
-
-                for (const file of data.files) {
-                    if (download.isCancelled) return;
-
-                    if (file.mimeType === 'application/vnd.google-apps.folder') {
-                        const uniqueFolderName = getUniqueFileName(file.name, path);
-                        const folderPath = path + uniqueFolderName + '/';
-                        zip.folder(uniqueFolderName);
-                        await processFolder(file.id, folderPath);
-                    } else {
-                        const fileResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${apiKey}`);
-                        if (fileResponse.ok) {
-                            const content = await fileResponse.arrayBuffer();
-                            const uniqueFileName = getUniqueFileName(file.name, path);
-                            zip.file(path + uniqueFileName, content);
-                        }
-                        processedFiles++;
-                        download.progress = Math.round((processedFiles / totalFiles) * 100);
-                    }
-                }
-            } catch (error) {
-                console.error('Error processing folder:', error);
-                throw error;
-            }
-        }
-
-        await processFolder(download.folderId);
-
-        if (download.isCancelled) {
-            activeDownloads.delete(downloadId);
-            return;
-        }
-
-        const zipBuffer = await zip.generateAsync({
-            type: 'nodebuffer',
-            compression: 'DEFLATE',
-            compressionOptions: { level: 5 }
-        });
-
-        download.zipBuffer = zipBuffer;
-        download.status = 'completed';
-        download.progress = 100;
-        download.downloadUrl = `/download-zip/${downloadId}`;
-
-        // Clean up after 5 minutes
-        setTimeout(() => {
-            activeDownloads.delete(downloadId);
-        }, 300000);
-
-    } catch (error) {
-        console.error('Download processing error:', error);
-        download.status = 'error';
-        download.error = error.message;
-        activeDownloads.delete(downloadId);
+      return `${baseName} (${count})${ext}`;
     }
+
+    // Helper function to count total files in a folder
+    async function countFiles(folderId) {
+      try {
+        const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents&fields=files(id,mimeType)&key=${apiKey}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to fetch folder contents');
+        const data = await response.json();
+
+        let count = data.files.length;
+        for (const file of data.files) {
+          if (file.mimeType === 'application/vnd.google-apps.folder') {
+            count += await countFiles(file.id);
+          }
+        }
+        return count;
+      } catch (error) {
+        console.error('Error counting files:', error);
+        return 0;
+      }
+    }
+
+    // Count total files first
+    totalFiles = await countFiles(download.folderId);
+    if (totalFiles === 0) {
+      throw new Error('No files found in folder');
+    }
+
+    // Update status to downloading
+    download.status = 'downloading';
+    download.totalFiles = totalFiles;
+
+    // Use existing getAllFilesInFolder function but modified for progress tracking
+    async function processFolder(folderId, path = '') {
+      if (download.isCancelled) return;
+
+      try {
+        const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents&fields=files(id,name,mimeType)&key=${apiKey}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to fetch folder contents');
+        const data = await response.json();
+
+        for (const file of data.files) {
+          if (download.isCancelled) return;
+
+          if (file.mimeType === 'application/vnd.google-apps.folder') {
+            const uniqueFolderName = getUniqueFileName(file.name, path);
+            const folderPath = path + uniqueFolderName + '/';
+            zip.folder(uniqueFolderName);
+            await processFolder(file.id, folderPath);
+          } else {
+            const fileResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${apiKey}`);
+            if (fileResponse.ok) {
+              const content = await fileResponse.arrayBuffer();
+              const uniqueFileName = getUniqueFileName(file.name, path);
+              zip.file(path + uniqueFileName, content);
+            }
+            processedFiles++;
+            download.progress = Math.round((processedFiles / totalFiles) * 100);
+          }
+        }
+      } catch (error) {
+        console.error('Error processing folder:', error);
+        throw error;
+      }
+    }
+
+    await processFolder(download.folderId);
+
+    if (download.isCancelled) {
+      activeDownloads.delete(downloadId);
+      return;
+    }
+
+    const zipBuffer = await zip.generateAsync({
+      type: 'nodebuffer',
+      compression: 'DEFLATE',
+      compressionOptions: { level: 5 }
+    });
+
+    download.zipBuffer = zipBuffer;
+    download.status = 'completed';
+    download.progress = 100;
+    download.downloadUrl = `/download-zip/${downloadId}`;
+
+    // Clean up after 5 minutes
+    setTimeout(() => {
+      activeDownloads.delete(downloadId);
+    }, 300000);
+
+  } catch (error) {
+    console.error('Download processing error:', error);
+    download.status = 'error';
+    download.error = error.message;
+    activeDownloads.delete(downloadId);
+  }
 }
 
 // Route to serve the completed zip file
 app.get('/download-zip/:downloadId', (req, res) => {
-    const { downloadId } = req.params;
-    const download = activeDownloads.get(downloadId);
-    
-    if (!download || !download.zipBuffer) {
-        return res.status(404).send('Download not found or expired');
-    }
-    
-    res.setHeader('Content-Type', 'application/zip');
-    res.setHeader('Content-Disposition', `attachment; filename="${download.folderName}.zip"`);
-    res.send(download.zipBuffer);
+  const { downloadId } = req.params;
+  const download = activeDownloads.get(downloadId);
+
+  if (!download || !download.zipBuffer) {
+    return res.status(404).send('Download not found or expired');
+  }
+
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Disposition', `attachment; filename="${download.folderName}.zip"`);
+  res.send(download.zipBuffer);
 });
 
 // Route สำหรับดึงข้อมูลโฟลเดอร์จาก Google Drive
@@ -1019,7 +1022,7 @@ app.get('/api/folders', async (req, res) => {
   try {
     const url = `https://www.googleapis.com/drive/v3/files?q='${parentId}'+in+parents+and+mimeType='application/vnd.google-apps.folder'+and+trashed=false&fields=files(id,name)&key=${apiKey}`;
     const response = await fetch(url);
-    
+
     if (!response.ok) {
       throw new Error(`Google API error: ${response.statusText}`);
     }
@@ -1073,214 +1076,214 @@ const activeUploads = new Map();
 
 // Route to start upload
 app.post('/start-upload', upload.array('files'), async (req, res) => {
-    if (!req.files || !req.body.folderId) {
-        return res.status(400).json({ error: 'Missing files or folder ID' });
-    }
+  if (!req.files || !req.body.folderId) {
+    return res.status(400).json({ error: 'Missing files or folder ID' });
+  }
 
-    const files = req.files;
-    const { folderId } = req.body;
-    const uploadId = Date.now().toString();
-    const accessToken = req.headers.authorization?.split(' ')[1];
+  const files = req.files;
+  const { folderId } = req.body;
+  const uploadId = Date.now().toString();
+  const accessToken = req.headers.authorization?.split(' ')[1];
 
-    if (!accessToken) {
-        return res.status(401).json({ error: 'No authorization token provided' });
-    }
-    
-    activeUploads.set(uploadId, {
-        files: files.map(f => ({
-            name: f.originalname,
-            size: f.size,
-            type: f.mimetype,
-            buffer: f.buffer,
-            progress: 0,
-            status: 'pending'
-        })),
-        folderId,
-        accessToken,
-        progress: 0,
-        status: 'preparing',
-        isCancelled: false
-    });
-    
-    processUpload(uploadId).catch(console.error);
-    res.json({ uploadId });
+  if (!accessToken) {
+    return res.status(401).json({ error: 'No authorization token provided' });
+  }
+
+  activeUploads.set(uploadId, {
+    files: files.map(f => ({
+      name: f.originalname,
+      size: f.size,
+      type: f.mimetype,
+      buffer: f.buffer,
+      progress: 0,
+      status: 'pending'
+    })),
+    folderId,
+    accessToken,
+    progress: 0,
+    status: 'preparing',
+    isCancelled: false
+  });
+
+  processUpload(uploadId).catch(console.error);
+  res.json({ uploadId });
 });
 
 // Route to get upload progress
 app.get('/upload-progress/:uploadId', (req, res) => {
-    const { uploadId } = req.params;
-    const upload = activeUploads.get(uploadId);
-    
-    if (!upload) {
-        return res.json({ error: 'Upload not found' });
-    }
-    
-    if (upload.isCancelled) {
-        activeUploads.delete(uploadId);
-        return res.json({ error: 'Upload cancelled' });
-    }
-    
-    res.json({
-        progress: upload.progress,
-        status: upload.status,
-        completed: upload.status === 'completed',
-        files: upload.files
-    });
+  const { uploadId } = req.params;
+  const upload = activeUploads.get(uploadId);
+
+  if (!upload) {
+    return res.json({ error: 'Upload not found' });
+  }
+
+  if (upload.isCancelled) {
+    activeUploads.delete(uploadId);
+    return res.json({ error: 'Upload cancelled' });
+  }
+
+  res.json({
+    progress: upload.progress,
+    status: upload.status,
+    completed: upload.status === 'completed',
+    files: upload.files
+  });
 });
 
 // Process upload in background
 async function processUpload(uploadId) {
-    const upload = activeUploads.get(uploadId);
-    if (!upload || upload.isCancelled) return;
+  const upload = activeUploads.get(uploadId);
+  if (!upload || upload.isCancelled) return;
 
-    try {
-        upload.status = 'uploading';
-        let totalProgress = 0;
+  try {
+    upload.status = 'uploading';
+    let totalProgress = 0;
 
-        for (const file of upload.files) {
-            if (upload.isCancelled) {
-                console.log('Upload cancelled, stopping process');
-                upload.status = 'cancelled';
-                activeUploads.delete(uploadId);
-                return;
-            }
-
-            file.status = 'uploading';
-            try {
-                const metadata = {
-                    name: file.name,
-                    mimeType: file.type,
-                    parents: [upload.folderId]
-                };
-
-                const controller = new AbortController();
-                const signal = controller.signal;
-
-                // Store controller for cancellation
-                file.controller = controller;
-
-                const form = new FormData();
-                form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-                form.append('file', new Blob([file.buffer], { type: file.type }));
-
-                const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${upload.accessToken}`
-                    },
-                    body: form,
-                    signal
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Upload failed: ${response.statusText}`);
-                }
-
-                file.status = 'completed';
-                file.progress = 100;
-                delete file.buffer;
-                delete file.controller;
-            } catch (error) {
-                if (error.name === 'AbortError') {
-                    console.log(`Upload of ${file.name} was cancelled`);
-                    file.status = 'cancelled';
-                } else {
-                    console.error(`Error uploading file ${file.name}:`, error);
-                    file.status = 'error';
-                    file.error = error.message;
-                }
-            }
-
-            if (!upload.isCancelled) {
-                totalProgress = upload.files.reduce((sum, f) => sum + (f.progress || 0), 0);
-                upload.progress = Math.round(totalProgress / upload.files.length);
-            }
-        }
-
-        if (upload.isCancelled) {
-            upload.status = 'cancelled';
-            activeUploads.delete(uploadId);
-        } else {
-            upload.status = upload.files.some(f => f.status === 'error') ? 'completed with errors' : 'completed';
-            setTimeout(() => {
-                activeUploads.delete(uploadId);
-            }, 300000);
-        }
-
-    } catch (error) {
-        console.error('Upload processing error:', error);
-        upload.status = 'error';
-        upload.error = error.message;
+    for (const file of upload.files) {
+      if (upload.isCancelled) {
+        console.log('Upload cancelled, stopping process');
+        upload.status = 'cancelled';
         activeUploads.delete(uploadId);
+        return;
+      }
+
+      file.status = 'uploading';
+      try {
+        const metadata = {
+          name: file.name,
+          mimeType: file.type,
+          parents: [upload.folderId]
+        };
+
+        const controller = new AbortController();
+        const signal = controller.signal;
+
+        // Store controller for cancellation
+        file.controller = controller;
+
+        const form = new FormData();
+        form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+        form.append('file', new Blob([file.buffer], { type: file.type }));
+
+        const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${upload.accessToken}`
+          },
+          body: form,
+          signal
+        });
+
+        if (!response.ok) {
+          throw new Error(`Upload failed: ${response.statusText}`);
+        }
+
+        file.status = 'completed';
+        file.progress = 100;
+        delete file.buffer;
+        delete file.controller;
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          console.log(`Upload of ${file.name} was cancelled`);
+          file.status = 'cancelled';
+        } else {
+          console.error(`Error uploading file ${file.name}:`, error);
+          file.status = 'error';
+          file.error = error.message;
+        }
+      }
+
+      if (!upload.isCancelled) {
+        totalProgress = upload.files.reduce((sum, f) => sum + (f.progress || 0), 0);
+        upload.progress = Math.round(totalProgress / upload.files.length);
+      }
     }
+
+    if (upload.isCancelled) {
+      upload.status = 'cancelled';
+      activeUploads.delete(uploadId);
+    } else {
+      upload.status = upload.files.some(f => f.status === 'error') ? 'completed with errors' : 'completed';
+      setTimeout(() => {
+        activeUploads.delete(uploadId);
+      }, 300000);
+    }
+
+  } catch (error) {
+    console.error('Upload processing error:', error);
+    upload.status = 'error';
+    upload.error = error.message;
+    activeUploads.delete(uploadId);
+  }
 }
 
 // Route to cancel upload
 app.post('/cancel-upload/:uploadId', (req, res) => {
-    const { uploadId } = req.params;
-    const upload = activeUploads.get(uploadId);
-    
-    if (upload) {
-        upload.isCancelled = true;
-        // Cancel all ongoing file uploads
-        upload.files.forEach(file => {
-            if (file.controller) {
-                file.controller.abort();
-            }
-        });
-        console.log(`Upload ${uploadId} cancelled`);
-        res.status(200).json({ message: 'Upload cancelled successfully' });
-    } else {
-        res.status(404).json({ error: 'Upload not found' });
-    }
+  const { uploadId } = req.params;
+  const upload = activeUploads.get(uploadId);
+
+  if (upload) {
+    upload.isCancelled = true;
+    // Cancel all ongoing file uploads
+    upload.files.forEach(file => {
+      if (file.controller) {
+        file.controller.abort();
+      }
+    });
+    console.log(`Upload ${uploadId} cancelled`);
+    res.status(200).json({ message: 'Upload cancelled successfully' });
+  } else {
+    res.status(404).json({ error: 'Upload not found' });
+  }
 });
 
 // Add route to add files to existing upload
 app.post('/add-files/:uploadId', upload.array('files'), async (req, res) => {
-    try {
-        const { uploadId } = req.params;
-        const upload = activeUploads.get(uploadId);
-        
-        if (!upload) {
-            return res.status(404).json({ error: 'Upload not found or expired' });
-        }
-        
-        if (upload.isCancelled) {
-            return res.status(400).json({ error: 'Upload was cancelled' });
-        }
-        
-        if (!req.files || req.files.length === 0) {
-            return res.status(400).json({ error: 'No files provided' });
-        }
+  try {
+    const { uploadId } = req.params;
+    const upload = activeUploads.get(uploadId);
 
-        // Add new files to existing upload
-        const newFiles = req.files.map(f => ({
-            name: f.originalname,
-            size: f.size,
-            type: f.mimetype,
-            buffer: f.buffer,
-            progress: 0,
-            status: 'pending',
-            controller: null
-        }));
-
-        // Append new files
-        upload.files.push(...newFiles);
-        
-        // Update progress calculation
-        const completedFiles = upload.files.filter(f => f.status === 'completed').length;
-        upload.progress = Math.round((completedFiles / upload.files.length) * 100);
-
-        res.json({ 
-            success: true,
-            message: 'Files added successfully',
-            totalFiles: upload.files.length,
-            progress: upload.progress
-        });
-    } catch (error) {
-        console.error('Error adding files:', error);
-        res.status(500).json({ error: error.message || 'Failed to add files' });
+    if (!upload) {
+      return res.status(404).json({ error: 'Upload not found or expired' });
     }
+
+    if (upload.isCancelled) {
+      return res.status(400).json({ error: 'Upload was cancelled' });
+    }
+
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'No files provided' });
+    }
+
+    // Add new files to existing upload
+    const newFiles = req.files.map(f => ({
+      name: f.originalname,
+      size: f.size,
+      type: f.mimetype,
+      buffer: f.buffer,
+      progress: 0,
+      status: 'pending',
+      controller: null
+    }));
+
+    // Append new files
+    upload.files.push(...newFiles);
+
+    // Update progress calculation
+    const completedFiles = upload.files.filter(f => f.status === 'completed').length;
+    upload.progress = Math.round((completedFiles / upload.files.length) * 100);
+
+    res.json({
+      success: true,
+      message: 'Files added successfully',
+      totalFiles: upload.files.length,
+      progress: upload.progress
+    });
+  } catch (error) {
+    console.error('Error adding files:', error);
+    res.status(500).json({ error: error.message || 'Failed to add files' });
+  }
 });
 
 // Handle unhandled routes
