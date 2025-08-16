@@ -1,6 +1,6 @@
 // script-data.js
 // Mobile menu toggle
-document.getElementById('menuToggle').addEventListener('click', function() {
+document.getElementById('menuToggle').addEventListener('click', function () {
     document.getElementById('navLinks').classList.toggle('active');
 });
 
@@ -33,24 +33,24 @@ function customPrompt(message, defaultValue = '', callback) {
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(promptBox);
-    
+
     const input = promptBox.querySelector('input');
     input.focus();
     input.select();
-    
+
     promptBox.querySelector('.cancel-btn').addEventListener('click', () => {
         promptBox.remove();
         callback(null);
     });
-    
+
     promptBox.querySelector('.confirm-btn').addEventListener('click', () => {
         const value = input.value;
         promptBox.remove();
         callback(value);
     });
-    
+
     input.addEventListener('keyup', (e) => {
         if (e.key === 'Enter') {
             const value = input.value;
@@ -73,14 +73,14 @@ function customConfirm(message, callback) {
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(confirmBox);
-    
+
     confirmBox.querySelector('.cancel-btn').addEventListener('click', () => {
         confirmBox.remove();
         callback(false);
     });
-    
+
     confirmBox.querySelector('.confirm-btn').addEventListener('click', () => {
         confirmBox.remove();
         callback(true);
@@ -127,9 +127,9 @@ function customEditDialog(currentName, currentUrl, callback) {
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(editBox);
-    
+
     // ตัวเลือกการแก้ไข
     const editNameBtn = editBox.querySelector('#editNameBtn');
     const editUrlBtn = editBox.querySelector('#editUrlBtn');
@@ -137,7 +137,7 @@ function customEditDialog(currentName, currentUrl, callback) {
     const editNameSection = editBox.querySelector('#editNameSection');
     const editUrlSection = editBox.querySelector('#editUrlSection');
     const editBothSection = editBox.querySelector('#editBothSection');
-    
+
     editNameBtn.addEventListener('click', () => {
         editNameBtn.classList.add('active');
         editUrlBtn.classList.remove('active');
@@ -146,7 +146,7 @@ function customEditDialog(currentName, currentUrl, callback) {
         editUrlSection.style.display = 'none';
         editBothSection.style.display = 'none';
     });
-    
+
     editUrlBtn.addEventListener('click', () => {
         editNameBtn.classList.remove('active');
         editUrlBtn.classList.add('active');
@@ -155,7 +155,7 @@ function customEditDialog(currentName, currentUrl, callback) {
         editUrlSection.style.display = 'block';
         editBothSection.style.display = 'none';
     });
-    
+
     editBothBtn.addEventListener('click', () => {
         editNameBtn.classList.remove('active');
         editUrlBtn.classList.remove('active');
@@ -164,29 +164,29 @@ function customEditDialog(currentName, currentUrl, callback) {
         editUrlSection.style.display = 'none';
         editBothSection.style.display = 'block';
     });
-    
+
     // ปุ่มยกเลิก
     editBox.querySelector('.cancel-btn').addEventListener('click', () => {
         editBox.remove();
         callback(null);
     });
-    
+
     // ปุ่มยืนยัน
     editBox.querySelector('.confirm-btn').addEventListener('click', () => {
         let newName = currentName;
         let newUrl = currentUrl;
-        
+
         if (editNameBtn.classList.contains('active')) {
             newName = editBox.querySelector('#editNameInput').value;
-        } 
+        }
         else if (editUrlBtn.classList.contains('active')) {
             newUrl = editBox.querySelector('#editUrlInput').value;
-        } 
+        }
         else {
             newName = editBox.querySelector('#editBothNameInput').value;
             newUrl = editBox.querySelector('#editBothUrlInput').value;
         }
-        
+
         editBox.remove();
         callback({ newName, newUrl });
     });
@@ -197,9 +197,9 @@ function alertBox(message, type) {
     const alertBox = document.createElement('div');
     alertBox.className = `alert-box ${type}`;
     alertBox.textContent = message;
-    
+
     document.body.appendChild(alertBox);
-    
+
     setTimeout(() => {
         alertBox.classList.add('fade-out');
         setTimeout(() => {
@@ -213,10 +213,22 @@ async function loadLinks() {
     const container = document.getElementById('link-container');
     const linkCount = document.getElementById('linkCount');
     container.innerHTML = '<div class="loading">Loading links...</div>';
-    
+
     try {
         const response = await fetch('/data');
         const links = await response.json();
+
+        links.sort((a, b) => {
+            // แปลงวันที่เป็น timestamp เพื่อเปรียบเทียบ
+            function parseThaiDate(str) {
+                const [datePart, timePart] = str.split(' ');
+                const [day, month, year] = datePart.split('/').map(Number);
+                const christianYear = year - 543; // แปลง พ.ศ. เป็น ค.ศ.
+                const [hour, minute] = timePart ? timePart.split(':').map(Number) : [0, 0];
+                return new Date(christianYear, month - 1, day, hour, minute).getTime();
+            }
+            return parseThaiDate(b.date) - parseThaiDate(a.date);
+        });
 
         container.innerHTML = '';
         linkCount.textContent = `${links.length} links`;
@@ -279,17 +291,17 @@ async function loadLinks() {
             linkDetails.appendChild(linkName);
             linkDetails.appendChild(linkDate);
             linkDetails.appendChild(linkUrl);
-            
+
             linkInfo.appendChild(linkIcon);
             linkInfo.appendChild(linkDetails);
-            
+
             linkActions.appendChild(openBtn);
             linkActions.appendChild(editBtn);
             linkActions.appendChild(deleteBtn);
-            
+
             linkItem.appendChild(linkInfo);
             linkItem.appendChild(linkActions);
-            
+
             container.appendChild(linkItem);
         });
     } catch (error) {
@@ -322,7 +334,7 @@ async function saveLink(url, name) {
         hour12: false
     });
     const formattedDateTime = `${currentDate} ${currentTime}`;
-    
+
     const username = localStorage.getItem('username');
 
     try {
@@ -361,23 +373,23 @@ function passwordPrompt(message, callback) {
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(promptBox);
-    
+
     const passwordInput = promptBox.querySelector('.password-input');
     passwordInput.focus();
-    
+
     promptBox.querySelector('.cancel-btn').addEventListener('click', () => {
         promptBox.remove();
         callback(null);
     });
-    
+
     promptBox.querySelector('.confirm-btn').addEventListener('click', () => {
         const password = passwordInput.value;
         promptBox.remove();
         callback(password);
     });
-    
+
     passwordInput.addEventListener('keyup', (e) => {
         if (e.key === 'Enter') {
             const password = passwordInput.value;
@@ -398,7 +410,7 @@ async function editLink(id, currentName, currentUrl) {
     } else {
         passwordPrompt('Please enter password to edit link:', (password) => {
             const correctPassword = 'panuwat';
-            
+
             if (password === null) return;
             if (password === correctPassword) {
                 customEditDialog(currentName, currentUrl, (result) => {
@@ -424,7 +436,7 @@ async function deleteLink(id) {
     } else {
         passwordPrompt('Please enter password to delete link:', (password) => {
             const correctPassword = 'panuwat';
-            
+
             if (password === null) return;
             if (password === correctPassword) {
                 customConfirm('Are you sure you want to delete this link?', (confirmed) => {
@@ -447,9 +459,9 @@ async function editLinkRequest(id, newName, newUrl) {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 name: newName,
-                url: newUrl 
+                url: newUrl
             }),
         });
 
@@ -486,7 +498,7 @@ async function deleteLinkRequest(id) {
 }
 
 // Handle the form submission for adding new links
-document.getElementById('add-link-form').addEventListener('submit', function(event) {
+document.getElementById('add-link-form').addEventListener('submit', function (event) {
     event.preventDefault();
     const url = document.getElementById('link-url').value;
     const name = document.getElementById('link-name').value || url;
@@ -506,7 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Check login status when page loads
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const isLoggedIn = localStorage.getItem('username') ? true : false;
     updateNavLinks(isLoggedIn);
     fetchDailyVisitors();
@@ -516,9 +528,9 @@ document.addEventListener('DOMContentLoaded', function() {
 function updateNavLinks(isLoggedIn) {
     const loginLink = document.getElementById('loginLink');
     const logoutLink = document.getElementById('logoutLink');
-    
+
     if (!loginLink || !logoutLink) return;
-    
+
     if (isLoggedIn) {
         loginLink.style.display = 'none';
         logoutLink.style.display = 'block';
@@ -534,9 +546,9 @@ async function fetchUserProfile() {
         const username = localStorage.getItem('username');
         const profileName = document.getElementById('profileName');
         const profileEmail = document.getElementById('profileEmail');
-        
+
         if (!profileName || !profileEmail) return;
-        
+
         if (!username) {
             profileName.textContent = 'ผู้เยี่ยมชม';
             profileEmail.textContent = 'กรุณาเข้าสู่ระบบ';
