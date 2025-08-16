@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="/img/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login & Register</title>
     <link rel="stylesheet" href="/styles/styles-login.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="/script/script-login.js" defer></script>
 </head>
+
 <body>
     <nav>
         <div class="nav-container">
@@ -22,119 +25,131 @@
                 <a href="./about.html"><i class="fas fa-info-circle"></i> About</a>
                 <a href="./suport.html"><i class="fas fa-hand-holding-heart"></i> Suport</a>
                 <a href="./login.html" id="loginLink" class="active"><i class="fas fa-sign-in-alt"></i> Login</a>
-                <a href="./logout.html" id="logoutLink" style="display: none;"><i class="fas fa-sign-out-alt"></i> Profile</a>
+                <a href="./logout.html" id="logoutLink" style="display: none;"><i class="fas fa-sign-out-alt"></i>
+                    Profile</a>
             </div>
         </div>
     </nav>
 
 
-<div class="background">
-    <div class="container">
-        <div class="profile-card">
-            <div class="form-container active" id="loginContainer">
-                <div class="form-header">
-                    <h2>Login</h2>
-                    <p class="form-description">Please enter your credentials</p>
-                </div>
-                <form id="loginForm" onsubmit="event.preventDefault(); login();">
-                    <div class="input-group">
-                        <div class="input-wrapper">
-                            <i class="fas fa-user"></i>
-                            <input type="text" id="loginEmail" class="input-field" placeholder="Email" required>
-                        </div>
-                        <div class="input-wrapper">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" id="loginPassword" class="input-field" placeholder="Password" required>
-                            
-                        </div>
+    <div class="background">
+        <div class="container">
+            <div class="profile-card">
+                <div class="form-container active" id="loginContainer">
+                    <div class="form-header">
+                        <h2>Login</h2>
+                        <p class="form-description">Please enter your credentials</p>
                     </div>
+                    <form id="loginForm" onsubmit="event.preventDefault(); login();">
+                        <div class="input-group">
+                            <div class="input-wrapper">
+                                <i class="fas fa-user"></i>
+                                <input type="text" id="loginEmail" class="input-field" placeholder="Email" required>
+                            </div>
+                            <div class="input-wrapper">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="loginPassword" class="input-field" placeholder="Password"
+                                    required>
 
-                    <div class="form-actions">
-                        <a href="#" class="forgot-password" onclick="showForgotPasswordPrompt()">Forgot password?</a>
-                    </div>
-                    
-                    <button type="submit" class="submit-btn">Login</button>
-                    <p class="switch-form">Don't have an account? <a href="#" onclick="toggleForm('register')">Register here</a></p>
-                </form>
-            </div>
+                            </div>
+                        </div>
 
-            <div class="form-container" id="registerContainer">
-                <div class="form-header">
-                    <h2>Register</h2>
-                    <p class="form-description">Create your new account</p>
-                </div>
-                <form id="registerForm" onsubmit="event.preventDefault(); register();">
-                    <div class="input-group">
-                        <div class="input-wrapper">
-                            <i class="fas fa-user"></i>
-                            <input type="text" id="registerUsername" class="input-field" placeholder="Username" required>
+                        <div class="form-actions">
+                            <a href="#" class="forgot-password" onclick="showForgotPasswordPrompt()">Forgot
+                                password?</a>
                         </div>
-                        <div class="input-wrapper">
-                            <i class="fas fa-envelope"></i>
-                            <input type="email" id="registerEmail" class="input-field" placeholder="Email" required>
-                        </div>
-                        <div class="input-wrapper">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" id="registerPassword" class="input-field" placeholder="Password" required>
-                            
-                        </div>
-                        <div class="input-wrapper">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" id="confirmPassword" class="input-field" placeholder="Confirm Password" required>
-                            
-                        </div>
-                    </div>
-                    <div class="terms">
-                        <input type="checkbox" id="terms" required>
-                        <label for="terms">I agree to the <a href="#">Terms and Conditions</a></label>
-                    </div>
-                    <button type="submit" class="submit-btn">Register</button>
-                    <p class="switch-form">Already have an account? <a href="#" onclick="toggleForm('login')">Login here</a></p>
-                </form>
-            </div>
 
-            <!-- Add Forgot Password Container -->
-            <div class="form-container" id="forgotPasswordContainer" style="display: none;">
-                <div class="form-header">
-                    <h2>Reset Password</h2>
-                    <p class="form-description">Enter your account details</p>
-                </div>
-                <div id="credentialsForm">
-                    <div class="input-group">
-                        <div class="input-wrapper">
-                            <i class="fas fa-user"></i>
-                            <input type="text" id="resetUsername" class="input-field" placeholder="Username" required>
-                        </div>
-                        <div class="input-wrapper">
-                            <i class="fas fa-envelope"></i>
-                            <input type="email" id="resetEmail" class="input-field" placeholder="Email" required>
-                        </div>
-                    </div>
-                    <button type="button" class="submit-btn" onclick="checkResetCredentials()">Continue</button>
+                        <button type="submit" class="submit-btn">Login</button>
+                        <p class="switch-form">Don't have an account? <a href="#"
+                                onclick="toggleForm('register')">Register here</a></p>
+                    </form>
                 </div>
 
-                <div id="resetForm" style="display: none;">
-                    <div class="input-group">
-                        <div class="input-wrapper">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" id="newPassword" class="input-field" placeholder="New Password" required>
-                        </div>
-                        <div class="input-wrapper">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" id="confirmNewPassword" class="input-field" placeholder="Confirm New Password" required>
-                        </div>
+                <div class="form-container" id="registerContainer">
+                    <div class="form-header">
+                        <h2>Register</h2>
+                        <p class="form-description">Create your new account</p>
                     </div>
-                    <button type="button" class="submit-btn" onclick="resetPassword()">Reset Password</button>
+                    <form id="registerForm" onsubmit="event.preventDefault(); register();">
+                        <div class="input-group">
+                            <div class="input-wrapper">
+                                <i class="fas fa-user"></i>
+                                <input type="text" id="registerUsername" class="input-field" placeholder="Username"
+                                    required>
+                            </div>
+                            <div class="input-wrapper">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" id="registerEmail" class="input-field" placeholder="Email" required>
+                            </div>
+                            <div class="input-wrapper">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="registerPassword" class="input-field" placeholder="Password"
+                                    required>
+
+                            </div>
+                            <div class="input-wrapper">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="confirmPassword" class="input-field"
+                                    placeholder="Confirm Password" required>
+
+                            </div>
+                        </div>
+                        <div class="terms">
+                            <input type="checkbox" id="terms" required>
+                            <label for="terms">I agree to the <a href="#">Terms and Conditions</a></label>
+                        </div>
+                        <button type="submit" class="submit-btn">Register</button>
+                        <p class="switch-form">Already have an account? <a href="#" onclick="toggleForm('login')">Login
+                                here</a></p>
+                    </form>
                 </div>
-                
-                <p class="switch-form">
-                    <a href="#" onclick="toggleForm('login')">Back to Login</a>
-                </p>
+
+                <!-- Add Forgot Password Container -->
+                <div class="form-container" id="forgotPasswordContainer" style="display: none;">
+                    <div class="form-header">
+                        <h2>Reset Password</h2>
+                        <p class="form-description">Enter your account details</p>
+                    </div>
+                    <div id="credentialsForm">
+                        <div class="input-group">
+                            <div class="input-wrapper">
+                                <i class="fas fa-user"></i>
+                                <input type="text" id="resetUsername" class="input-field" placeholder="Username"
+                                    required>
+                            </div>
+                            <div class="input-wrapper">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" id="resetEmail" class="input-field" placeholder="Email" required>
+                            </div>
+                        </div>
+                        <button type="button" class="submit-btn" onclick="checkResetCredentials()">Continue</button>
+                    </div>
+
+                    <div id="resetForm" style="display: none;">
+                        <div class="input-group">
+                            <div class="input-wrapper">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="newPassword" class="input-field" placeholder="New Password"
+                                    required>
+                            </div>
+                            <div class="input-wrapper">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="confirmNewPassword" class="input-field"
+                                    placeholder="Confirm New Password" required>
+                            </div>
+                        </div>
+                        <button type="button" class="submit-btn" onclick="resetPassword()">Reset Password</button>
+                    </div>
+
+                    <p class="switch-form">
+                        <a href="#" onclick="toggleForm('login')">Back to Login</a>
+                    </p>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="alertBox" class="alert-box"></div>
-</div>
+        <div id="alertBox" class="alert-box"></div>
+    </div>
 </body>
+
 </html>

@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="/img/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Google Drive Files</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/styles/styles-files.css">
     <script src="/script/script-files.js" defer></script>
 </head>
+
 <body>
     <nav>
         <div class="nav-container">
@@ -49,7 +52,8 @@
                     </div>
                 </div>
                 <div class="search-container">
-                    <input type="text" id="searchBox" class="search-box" placeholder="Search..." oninput="filterFiles()">
+                    <input type="text" id="searchBox" class="search-box" placeholder="Search..."
+                        oninput="filterFiles()">
                 </div>
                 <div class="view-toggle">
                     <button id="listViewBtn" title="List view" class="active">
@@ -61,7 +65,7 @@
                 </div>
                 <span class="file-count" id="fileCount">Loading...</span>
             </div>
-            
+
             <!-- List View -->
             <div class="file-list-description">
                 <div class="file-name"><strong>File Name</strong></div>
@@ -71,24 +75,25 @@
                 <div class="file-view"><strong>View</strong></div>
                 <div class="file-download-table"><strong>Download</strong></div>
             </div>
-                
-                <div id="fileList">
-                    <div class="loading">
-                        <div class="spinner"></div>
-                        <p>Loading files...</p>
-                    </div>
+
+            <div id="fileList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading files...</p>
                 </div>
             </div>
-            
-            <!-- Grid View -->
-            <div id="gridView" class="grid-view">
-                <div class="grid-container" id="gridContainer"></div>
-            </div>
         </div>
+
+        <!-- Grid View -->
+        <div id="gridView" class="grid-view">
+            <div class="grid-container" id="gridContainer"></div>
+        </div>
+    </div>
     </div>
 
     <script src="https://apis.google.com/js/api.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
     <script src="https://accounts.google.com/gsi/client"></script>
 </body>
+
 </html>
