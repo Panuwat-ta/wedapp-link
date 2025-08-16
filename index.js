@@ -121,9 +121,7 @@ app.get('/data', async (req, res) => {
           user: 0
         }
       },
-      {
-        $sort: { date: -1 } // เพิ่มบรรทัดนี้เพื่อเรียงวันที่ล่าสุดก่อน
-      }
+
     ]).toArray();
     res.json(data);
   } catch (error) {

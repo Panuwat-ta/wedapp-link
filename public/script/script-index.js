@@ -1,5 +1,5 @@
 // Mobile menu toggle
-document.getElementById('menuToggle').addEventListener('click', function() {
+document.getElementById('menuToggle').addEventListener('click', function () {
     document.getElementById('navLinks').classList.toggle('active');
 });
 
@@ -25,17 +25,17 @@ function createModal() {
         </div>
     `;
     document.body.insertAdjacentHTML('beforeend', modalHTML);
-    
+
     // Add event listeners for the modal
     document.getElementById('closeModal').addEventListener('click', closeModal);
-    document.getElementById('imageModal').addEventListener('click', function(e) {
+    document.getElementById('imageModal').addEventListener('click', function (e) {
         if (e.target === this) {
             closeModal();
         }
     });
-    
+
     // Close modal when pressing Escape key
-    document.addEventListener('keydown', function(e) {
+    document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {
             closeModal();
         }
@@ -47,14 +47,14 @@ function openModal(imageSrc, username, date) {
     const modalImage = document.getElementById('modalImage');
     const modalUsername = document.getElementById('modalUsername');
     const modalDate = document.getElementById('modalDate');
-    
+
     modalImage.src = imageSrc;
-    modalImage.onerror = function() {
+    modalImage.onerror = function () {
         this.src = '/img/b1.jpg';
     };
     modalUsername.textContent = username || 'Anonymous';
     modalDate.textContent = `Joined: ${date || 'Unknown date'}`;
-    
+
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
@@ -67,7 +67,7 @@ function closeModal() {
 
 function setupImageClickHandlers() {
     document.querySelectorAll('.user-avatar').forEach(avatar => {
-        avatar.addEventListener('click', function(e) {
+        avatar.addEventListener('click', function (e) {
             e.stopPropagation();
             const row = this.closest('tr');
             const username = row.querySelector('td[data-label="Username"] span').textContent;
@@ -89,11 +89,24 @@ async function fetchData() {
                 </td>
             </tr>
         `;
-    
+
         const response = await fetch('/data');
         const data = await response.json();
         tableBody.innerHTML = '';
-    
+
+        // เรียงข้อมูลจากวันที่ล่าสุดไปเก่าสุด
+        data.sort((a, b) => {
+            // แปลงวันที่เป็น timestamp เพื่อเปรียบเทียบ
+            function parseThaiDate(str) {
+                const [datePart, timePart] = str.split(' ');
+                const [day, month, year] = datePart.split('/').map(Number);
+                const christianYear = year - 543; // แปลง พ.ศ. เป็น ค.ศ.
+                const [hour, minute] = timePart ? timePart.split(':').map(Number) : [0, 0];
+                return new Date(christianYear, month - 1, day, hour, minute).getTime();
+            }
+            return parseThaiDate(b.date) - parseThaiDate(a.date);
+        });
+
         if (data.length === 0) {
             tableBody.innerHTML = `
                 <tr>
@@ -106,7 +119,7 @@ async function fetchData() {
             `;
             return;
         }
-    
+
         data.forEach(item => {
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -123,7 +136,7 @@ async function fetchData() {
             `;
             tableBody.appendChild(row);
         });
-        
+
         // Set up click handlers for the avatars
         setupImageClickHandlers();
     } catch (error) {
@@ -147,14 +160,14 @@ async function fetchData() {
 function filterTable() {
     const query = document.getElementById('searchBox').value.toLowerCase();
     const rows = document.querySelectorAll('#dataTable tbody tr');
-    
+
     rows.forEach(row => {
         if (row.classList.contains('empty-state')) return;
-        
+
         const cells = row.getElementsByTagName('td');
         const name = cells[2].textContent.toLowerCase();       // LinkName (คอลัมน์ที่ 3)
         const username = cells[3].textContent.toLowerCase();   // Username (คอลัมน์ที่ 4)
-        
+
         if (name.includes(query) || username.includes(query)) {
             row.style.display = '';
         } else {
@@ -167,9 +180,9 @@ function filterTable() {
 function updateNavLinks(isLoggedIn) {
     const loginLink = document.getElementById('loginLink');
     const logoutLink = document.getElementById('logoutLink');
-    
+
     if (!loginLink || !logoutLink) return;
-    
+
     if (isLoggedIn) {
         loginLink.style.display = 'none';
         logoutLink.style.display = 'block';
