@@ -331,6 +331,10 @@ nav a i {
     .modal-buttons {
         padding: 1rem 1.5rem;
     }
+    .nav-links #loginLink,
+    .nav-links #logoutLink {
+        margin-left: 0;
+    }
 }
 
 /* Modal Styles */
@@ -421,5 +425,10 @@ nav a i {
     .nav-container {
         flex-direction: column;
         padding: 0px;
+    }
+
+    .nav-links #loginLink,
+    .nav-links #logoutLink {
+        margin-left: 0;
     }
 }

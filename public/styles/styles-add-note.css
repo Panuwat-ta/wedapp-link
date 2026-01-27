@@ -537,4 +537,8 @@ nav a i {
         flex-direction: column;
         padding: 0px;
     }
+    .nav-links #loginLink,
+    .nav-links #logoutLink {
+        margin-left: 0;
+    }
 }
