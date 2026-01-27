@@ -1,43 +1,25 @@
-// Mobile menu toggle
 document.addEventListener('DOMContentLoaded', () => {
     const menuToggle = document.getElementById('menuToggle');
-    if (menuToggle) {
-        menuToggle.addEventListener('click', function () {
-            const navLinks = document.getElementById('navLinks');
-            if (navLinks) {
-                navLinks.classList.toggle('active');
-            }
-        });
-    }
+    const navLinks = document.getElementById('navLinks');
 
-    // Set up logout button event listener
-    const logoutButton = document.getElementById('logoutButton');
-    if (logoutButton) {
-        logoutButton.addEventListener('click', () => {
-            const oldConfirmBox = document.getElementById('confirmBox');
-            if (oldConfirmBox) {
-                oldConfirmBox.remove();
-            }
+    menuToggle.addEventListener('click', () => {
+        navLinks.classList.toggle('active');
+    });
 
-            confirmLogout(
-                'Do you want to log out?',
-                () => logout(),
-                () => alertBox('Cancel logout', 'info')
-            );
-        });
-    }
+    fetchUserProfile();
+    fetchUserLinksCount();
 
-    // Set up edit profile button
     const editProfileButton = document.getElementById('editProfileButton');
     if (editProfileButton) {
         editProfileButton.addEventListener('click', showEditProfileModal);
     }
 
-    // Initial setup
-    const isLoggedIn = localStorage.getItem('username') ? true : false;
-    updateNavLinks(isLoggedIn);
-    fetchUserLinksCount();
-    fetchUserProfile();
+    const logoutButton = document.getElementById('logoutButton');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', () => {
+            confirmLogout('Are you sure you want to logout?', logout);
+        });
+    }
 });
 
 function setActive(element) {

@@ -98,6 +98,113 @@ app.get('/logout.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'templates', 'logout.html'));
 });
 
+// Route สำหรับไฟล์ note.html
+app.get('/note.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'templates', 'note.html'));
+});
+
+// Route สำหรับไฟล์ add-note.html
+app.get('/add-note.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'templates', 'add-note.html'));
+});
+
+// API endpoint for fetching notes
+app.get('/api/notes', async (req, res) => {
+  const { username } = req.query;
+  if (!username) {
+    return res.status(400).send('Username is required');
+  }
+
+  try {
+    const collection = client.db("Link").collection("notes");
+    const notes = await collection.find({ username }).sort({ createdAt: -1 }).toArray();
+    res.json(notes);
+  } catch (error) {
+    console.error("Error fetching notes:", error);
+    res.status(500).send("Error fetching notes");
+  }
+});
+
+// API endpoint for saving a new note
+app.post('/api/notes', async (req, res) => {
+  console.log('--- NEW NOTE REQUEST ---');
+  console.log('Request Body:', req.body);
+  const { content, noteName } = req.body;
+  const username = req.headers['x-username'];
+
+  if (!content || !username || !noteName) {
+    return res.status(400).send('Content, note name, and username are required');
+  }
+
+  try {
+    const collection = client.db("Link").collection("notes");
+    await collection.insertOne({
+      noteName: String(noteName), // Ensure noteName is a string
+      content: String(content), // Ensure content is a string
+      username: String(username), // Ensure username is a string
+      createdAt: new Date()
+    });
+    res.status(201).send('Note saved successfully');
+  } catch (error) {
+    console.error("Error saving note:", error);
+    res.status(500).send("Error saving note");
+  }
+});
+
+// API endpoint for deleting a note
+app.delete('/api/notes/:id', async (req, res) => {
+  const { id } = req.params;
+
+  if (!ObjectId.isValid(id)) {
+    return res.status(400).send('Invalid note ID');
+  }
+
+  try {
+    const collection = client.db("Link").collection("notes");
+    const result = await collection.deleteOne({ _id: new ObjectId(id) });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).send('Note not found');
+    }
+
+    res.status(200).send('Note deleted successfully');
+  } catch (error) {
+    console.error("Error deleting note:", error);
+    res.status(500).send("Error deleting note");
+  }
+});
+
+// API endpoint for updating a note
+app.put('/api/notes/:id', async (req, res) => {
+  const { id } = req.params;
+  const { content, noteName } = req.body;
+
+  if (!ObjectId.isValid(id)) {
+    return res.status(400).send('Invalid note ID');
+  }
+
+  if (!content || !noteName) {
+    return res.status(400).send('Content and note name are required');
+  }
+
+  try {
+    const collection = client.db("Link").collection("notes");
+    const result = await collection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { content, noteName, updatedAt: new Date() } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).send('Note not found');
+    }
+
+    res.status(200).send('Note updated successfully');
+  } catch (error) {
+    console.error("Error updating note:", error);
+    res.status(500).send("Error updating note");
+  }
+});
+
 // Route สำหรับส่งข้อมูล MongoDB
 app.get('/data', async (req, res) => {
   try {
@@ -300,7 +407,7 @@ app.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(400).send('กรุณากรอกข้อมูลให้ครบถ้วน');
+    return res.status(400).json({ message: 'กรุณากรอกข้อมูลให้ครบถ้วน' });
   }
 
   try {
@@ -308,12 +415,12 @@ app.post('/login', async (req, res) => {
     const user = await usersCollection.findOne({ email });
 
     if (!user) {
-      return res.status(401).json('Invalid email or password');
+      return res.status(401).json({ message: 'Invalid email or password' });
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password); // Compare password using bcryptjs
     if (!passwordMatch) {
-      return res.status(401).json('Invalid email or password');
+      return res.status(401).json({ message: 'Invalid email or password' });
     }
 
     res.status(200).json({
@@ -325,7 +432,7 @@ app.post('/login', async (req, res) => {
     });
   } catch (error) {
     console.error("Error logging in:", error);
-    res.status(500).send("Error logging in");
+    res.status(500).json({ message: 'Error logging in' });
   }
 });
 

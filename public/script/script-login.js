@@ -58,12 +58,6 @@ async function login() {
     }
 }
 
-// Call this function on page load to set the initial state of nav links
-document.addEventListener('DOMContentLoaded', () => {
-    const isLoggedIn = false; // Replace with actual login status check
-    updateNavLinks(isLoggedIn);
-});
-
 function isValidEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -217,7 +211,17 @@ async function resetPassword() {
     }
 }
 
-// Mobile menu toggle
-document.getElementById('menuToggle').addEventListener('click', function () {
-    document.getElementById('navLinks').classList.toggle('active');
+document.addEventListener('DOMContentLoaded', () => {
+    // Check login status on page load
+    const isLoggedIn = localStorage.getItem('username') !== null;
+    updateNavLinks(isLoggedIn);
+
+    // Menu toggle for mobile
+    const menuToggle = document.getElementById('menuToggle');
+    const navLinks = document.getElementById('navLinks');
+    if (menuToggle && navLinks) {
+        menuToggle.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+    }
 });
