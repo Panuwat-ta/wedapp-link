@@ -416,7 +416,7 @@ nav a i {
     border: none;
     cursor: pointer;
     padding: 5px;
-    font-size: 1rem;
+    font-size: 1.3rem;
     transition: color 0.3s;
 }
 
@@ -427,6 +427,7 @@ nav a i {
 
 .edit-note-btn:hover {
     color: #2e8b45;
+    transform: translateY(-2px);
 }
 
 .delete-note-btn {
@@ -435,6 +436,7 @@ nav a i {
 
 .delete-note-btn:hover {
     color: #c5372a;
+    transform: translateY(-2px);
 }
 
 #editNoteName, #editNoteTextarea {
