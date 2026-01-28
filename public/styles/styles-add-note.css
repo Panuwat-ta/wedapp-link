@@ -212,9 +212,9 @@ nav a i {
 
 /* Edit Note Modal Specific Styles */
 #editNoteModal .modal-content {
-    max-width: 700px;
+    max-width: 900px;
     width: 95%;
-    padding: 2.5rem;
+    padding: 0;
     border-radius: 12px;
     background: #ffffff;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
@@ -222,6 +222,7 @@ nav a i {
     transform: translateY(20px);
     opacity: 0;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+    overflow: hidden;
 }
 
 #editNoteModal.active .modal-content {
@@ -229,14 +230,44 @@ nav a i {
     opacity: 1;
 }
 
+.note-modal-container {
+    display: flex;
+    min-height: 500px;
+}
+
+.note-history {
+    width: 300px;
+    background-color: #f8f9fa;
+    border-right: 1px solid #e9ecef;
+    padding: 20px;
+    overflow-y: auto;
+    max-height: 600px;
+}
+
+.note-history h3 {
+    margin: 0 0 15px 0;
+    color: #495057;
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.note-main {
+    flex: 1;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+}
+
 #editNoteModal h2 {
     color: #2d3748;
-    margin: 0 0 2rem 0;
-    font-size: 2rem;
+    margin: 0 0 1.5rem 0;
+    font-size: 1.5rem;
     font-weight: 700;
     text-align: center;
     position: relative;
-    padding-bottom: 1rem;
+    padding-bottom: 0.75rem;
 }
 
 #editNoteModal h2::after {
@@ -245,19 +276,49 @@ nav a i {
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 80px;
-    height: 4px;
+    width: 60px;
+    height: 3px;
     background: linear-gradient(90deg, #4f46e5, #7c3aed);
-    border-radius: 4px;
+    border-radius: 3px;
+}
+
+.history-item {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    transition: all 0.2s ease;
+}
+
+.history-item:hover {
+    border-color: #4f46e5;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.1);
+}
+
+.history-item.active {
+    border-color: #4f46e5;
+    background-color: #e7f3ff;
+    box-shadow: 0 2px 12px rgba(79, 70, 229, 0.2);
+}
+
+.history-content p {
+    margin: 0 0 5px 0;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.history-content strong {
+    color: #2d3748;
 }
 
 #editNoteName {
     width: 100%;
-    padding: 1rem 1.25rem;
-    margin-bottom: 1.5rem;
-    font-size: 1.1rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 1rem;
     border: 2px solid #e2e8f0;
-    border-radius: 10px;
+    border-radius: 8px;
     transition: all 0.3s ease;
     background-color: #f8fafc;
     color: #1e293b;
@@ -265,21 +326,23 @@ nav a i {
 
 #editNoteName:focus {
     border-color: #818cf8;
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
     outline: none;
     background-color: #ffffff;
 }
 
 #editNoteTextarea {
     width: 100%;
-    min-height: 350px;
-    padding: 1.25rem;
+    flex: 1;
+    min-height: 250px;
+    padding: 1rem;
     font-size: 1rem;
     line-height: 1.6;
     border: 2px solid #e0e0e0;
     border-radius: 8px;
     resize: vertical;
     transition: border-color 0.3s;
+    font-family: inherit;
 }
 
 #editNoteTextarea:focus {
@@ -291,38 +354,66 @@ nav a i {
 #editNoteModal .modal-buttons {
     display: flex;
     justify-content: flex-end;
-    gap: 15px;
-    margin-top: 25px;
-    padding-top: 20px;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 15px;
     border-top: 1px solid #eee;
 }
 
 #saveEditedNoteBtn {
     background-color: #27ae60;
     color: white;
-    padding: 10px 25px;
+    padding: 10px 20px;
     border-radius: 6px;
     font-weight: 500;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
 }
 
 #saveEditedNoteBtn:hover {
     background-color: #219653;
-    transform: translateY(-2px);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
 }
 
 #cancelEditBtn {
     background-color: #f1f1f1;
     color: #333;
-    padding: 10px 25px;
+    padding: 10px 20px;
     border-radius: 6px;
     font-weight: 500;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
 }
 
 #cancelEditBtn:hover {
     background-color: #e0e0e0;
-    transform: translateY(-2px);
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    .note-modal-container {
+        flex-direction: column;
+        max-height: 80vh;
+    }
+    
+    .note-history {
+        width: 100%;
+        max-height: 200px;
+        border-right: none;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .note-main {
+        padding: 20px;
+    }
+    
+    #editNoteModal .modal-content {
+        max-width: 95%;
+        margin: 10px;
+    }
 }
 
 /* Modal Styles */
@@ -431,21 +522,12 @@ nav a i {
 }
 
 .delete-note-btn {
-    color: var(--accent-color);
+    color: #c5372a;
 }
 
 .delete-note-btn:hover {
     color: #c5372a;
     transform: translateY(-2px);
-}
-
-#editNoteName, #editNoteTextarea {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    font-size: 1rem;
 }
 
 /* Textarea styles are now in the edit modal section */

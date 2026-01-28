@@ -53,12 +53,20 @@
     <!-- Edit Note Modal -->
     <div id="editNoteModal" class="modal">
         <div class="modal-content">
-            <h2>Edit Note</h2>
-            <input type="text" id="editNoteName" placeholder="Note Name">
-            <textarea id="editNoteTextarea"></textarea>
-            <div class="modal-buttons">
-                <button id="saveEditedNoteBtn">Save Changes</button>
-                <button id="cancelEditBtn">Cancel</button>
+            <div class="note-modal-container">
+                <div class="note-history">
+                    <h3>Edit History</h3>
+                    <div id="editHistoryList"></div>
+                </div>
+                <div class="note-main">
+                    <h2>Edit Note</h2>
+                    <input type="text" id="editNoteName" placeholder="Note Name">
+                    <textarea id="editNoteTextarea"></textarea>
+                    <div class="modal-buttons">
+                        <button id="saveEditedNoteBtn">Save Changes</button>
+                        <button id="cancelEditBtn">Cancel</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -178,6 +178,29 @@ app.delete('/api/notes/:id', async (req, res) => {
   }
 });
 
+// API endpoint for fetching a single note by ID
+app.get('/api/notes/:id', async (req, res) => {
+  const { id } = req.params;
+
+  if (!ObjectId.isValid(id)) {
+    return res.status(400).send('Invalid note ID');
+  }
+
+  try {
+    const collection = client.db("Link").collection("notes");
+    const note = await collection.findOne({ _id: new ObjectId(id) });
+
+    if (!note) {
+      return res.status(404).send('Note not found');
+    }
+
+    res.json(note);
+  } catch (error) {
+    console.error("Error fetching note:", error);
+    res.status(500).send("Error fetching note");
+  }
+});
+
 // API endpoint for updating a note
 app.put('/api/notes/:id', async (req, res) => {
   const { id } = req.params;

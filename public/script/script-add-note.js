@@ -138,6 +138,10 @@ document.addEventListener('DOMContentLoaded', () => {
         editNoteName.value = noteName;
         editNoteTextarea.value = content;
         editNoteModal.style.display = 'flex';
+        
+        // Fetch and display edit history
+        fetchNoteHistory(noteId);
+        
         setTimeout(() => {
             editNoteModal.classList.add('active');
         }, 10);
@@ -263,4 +267,104 @@ document.addEventListener('DOMContentLoaded', () => {
     cancelDeleteBtn.addEventListener('click', closeDeleteModal);
     saveEditedNoteBtn.addEventListener('click', editNote);
     cancelEditBtn.addEventListener('click', closeEditModal);
+
+    async function fetchNoteHistory(noteId) {
+        try {
+            const response = await fetch(`/api/notes/${noteId}`);
+            if (response.ok) {
+                const note = await response.json();
+                displayEditHistory(note);
+            } else {
+                console.error('Failed to fetch note history');
+            }
+        } catch (error) {
+            console.error('Error fetching note history:', error);
+        }
+    }
+
+    function displayEditHistory(note) {
+        const editHistoryList = document.getElementById('editHistoryList');
+        editHistoryList.innerHTML = '';
+        
+        // Add current version option
+        const currentVersionItem = document.createElement('div');
+        currentVersionItem.classList.add('history-item');
+        currentVersionItem.style.cursor = 'pointer';
+        currentVersionItem.style.backgroundColor = '#e7f3ff';
+        currentVersionItem.style.border = '1px solid #b3d9ff';
+        
+        const currentDate = new Date().toLocaleString('en-GB', { timeZone: 'Asia/Bangkok', hour12: false });
+        // Calculate edit count (current version number)
+        const editCount = (note.editHistory ? note.editHistory.length : 0) + 1;
+        
+        currentVersionItem.innerHTML = `
+            <div class="history-content">
+                <p><strong>Current Version</strong> #${editCount}</p>
+                <p><strong>${new Date().toLocaleString('en-GB', { timeZone: 'Asia/Bangkok', hour12: false })}</strong></p>
+                <p><strong>Title:</strong> ${note.noteName}</p>
+            </div>
+        `;
+        
+        currentVersionItem.addEventListener('click', () => {
+            // Load current version into edit form
+            editNoteName.value = note.noteName || '';
+            editNoteTextarea.value = note.content || '';
+            
+            // Remove 'active' class from previously selected item
+            const currentActive = document.querySelector('.history-item.active');
+            if (currentActive) {
+                currentActive.classList.remove('active');
+            }
+            // Add 'active' class to the clicked item
+            currentVersionItem.classList.add('active');
+        });
+        
+        editHistoryList.appendChild(currentVersionItem);
+        
+        if (!note.editHistory || note.editHistory.length === 0) {
+            return;
+        }
+        
+        // Sort history by date (newest first)
+        const sortedHistory = [...note.editHistory].sort((a, b) => new Date(b.editedAt) - new Date(a.editedAt));
+        
+        sortedHistory.forEach((history, index) => {
+            const historyItem = document.createElement('div');
+            historyItem.classList.add('history-item');
+            historyItem.style.cursor = 'pointer';
+            
+            const editDate = new Date(history.editedAt).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok', hour12: false });
+            const editType = history.editType === 'original' ? 'Created' : 'Modified';
+            
+            // Calculate version number for this history item
+            const totalVersions = sortedHistory.length + 1; // +1 for current version
+            const versionNumber = totalVersions - index; // Reverse order (newest gets highest number)
+            
+            historyItem.innerHTML = `
+                <div class="history-content">
+                    <p><strong>Title:</strong> ${history.noteName}</p>
+                    <p><strong>Modified by</strong> ${history.editedBy}</p>
+                    <p><strong>${editDate} (V.${versionNumber})</strong></p>
+                    <p><strong>By</strong> ${history.editedBy}</p>
+                </div>
+            `;
+            
+            // Add click event to load historical content into edit form
+            historyItem.addEventListener('click', () => {
+                // Load historical version into edit form
+                editNoteName.value = history.noteName || '';
+                editNoteTextarea.value = history.content || '';
+                
+                // Remove 'active' class from previously selected item
+                const currentActive = document.querySelector('.history-item.active');
+                if (currentActive) {
+                    currentActive.classList.remove('active');
+                }
+                // Add 'active' class to the clicked item
+                historyItem.classList.add('active');
+            });
+            
+            editHistoryList.appendChild(historyItem);
+        });
+    }
 });
