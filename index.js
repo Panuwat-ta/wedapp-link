@@ -138,13 +138,17 @@ app.post('/api/notes', async (req, res) => {
 
   try {
     const collection = client.db("Link").collection("notes");
-    await collection.insertOne({
+    const result = await collection.insertOne({
       noteName: String(noteName), // Ensure noteName is a string
       content: String(content), // Ensure content is a string
       username: String(username), // Ensure username is a string
-      createdAt: new Date()
+      createdAt: new Date(),
+      lastEditedBy: username,
+      lastEditedAt: new Date(),
+      editHistory: [] // Initialize empty edit history array
     });
-    res.status(201).send('Note saved successfully');
+    const newNote = await collection.findOne({ _id: result.insertedId });
+    res.status(201).json(newNote);
   } catch (error) {
     console.error("Error saving note:", error);
     res.status(500).send("Error saving note");
@@ -178,6 +182,7 @@ app.delete('/api/notes/:id', async (req, res) => {
 app.put('/api/notes/:id', async (req, res) => {
   const { id } = req.params;
   const { content, noteName } = req.body;
+  const username = req.headers['x-username'];
 
   if (!ObjectId.isValid(id)) {
     return res.status(400).send('Invalid note ID');
@@ -189,13 +194,52 @@ app.put('/api/notes/:id', async (req, res) => {
 
   try {
     const collection = client.db("Link").collection("notes");
-    const result = await collection.updateOne(
-      { _id: new ObjectId(id) },
-      { $set: { content, noteName, updatedAt: new Date() } }
-    );
-
-    if (result.matchedCount === 0) {
+    
+    // Get the current note to save as history
+    const currentNote = await collection.findOne({ _id: new ObjectId(id) });
+    
+    if (!currentNote) {
       return res.status(404).send('Note not found');
+    }
+
+    // Only save to history if content actually changed
+    if (currentNote.content !== content || currentNote.noteName !== noteName) {
+      // Create history entry with the current state before updating
+      const historyEntry = {
+        content: currentNote.content,
+        noteName: currentNote.noteName,
+        editedBy: currentNote.lastEditedBy || currentNote.username, // Last editor or original creator
+        editedAt: currentNote.lastEditedAt || currentNote.createdAt || currentNote.updatedAt,
+        editType: currentNote.editHistory && currentNote.editHistory.length > 0 ? 'modified' : 'original'
+      };
+
+      // Update the note with new content and add current state to history
+      const result = await collection.updateOne(
+        { _id: new ObjectId(id) },
+        { 
+          $set: { 
+            content, 
+            noteName, 
+            updatedAt: new Date(),
+            lastEditedBy: username,
+            lastEditedAt: new Date()
+          },
+          $push: { 
+            editHistory: historyEntry
+          }
+        }
+      );
+    } else {
+      // No changes made, just update the last edited info
+      const result = await collection.updateOne(
+        { _id: new ObjectId(id) },
+        { 
+          $set: { 
+            lastEditedBy: username,
+            lastEditedAt: new Date()
+          }
+        }
+      );
     }
 
     res.status(200).send('Note updated successfully');

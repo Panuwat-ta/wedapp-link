@@ -45,10 +45,22 @@
     <!-- View Note Modal -->
     <div id="viewNoteModal" class="modal">
         <div class="modal-content">
-            <h2 id="viewNoteName"></h2>
-            <div id="viewNoteContent" class="note-content-view"></div>
-            <div class="modal-buttons">
-                <button id="closeViewBtn">Close</button>
+            <div class="note-modal-container">
+                <div class="note-history">
+                    <h3>Edit History</h3>
+                    <div id="editHistoryList"></div>
+                </div>
+                <div class="note-main">
+                    <h2 id="viewNoteName"></h2>
+                    <div id="viewNoteContent" class="note-content-view"></div>
+                    <div class="modal-buttons">
+                        <div class="note-info">
+                            <small id="noteAuthor"></small>
+                            <small id="noteLastEdited"></small>
+                        </div>
+                        <button id="closeViewBtn">Close</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
