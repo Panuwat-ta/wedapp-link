@@ -5,6 +5,46 @@ document.addEventListener('DOMContentLoaded', () => {
     const menuToggle = document.getElementById('menuToggle');
     const navLinks = document.getElementById('navLinks');
 
+    const username = localStorage.getItem('username');
+    const userEmail = localStorage.getItem('email');
+    const loginLink = document.getElementById('loginLink');
+    const logoutLink = document.getElementById('logoutLink');
+    const navUsername = document.getElementById('navUsername');
+    const navUserAvatar = document.getElementById('navUserAvatar');
+
+    if (!username) {
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    if (loginLink && logoutLink) {
+        loginLink.style.display = 'none';
+        logoutLink.style.display = 'flex';
+        
+        // Update username in navbar
+        if (navUsername) {
+            navUsername.textContent = username;
+        }
+        
+        // Fetch and update user avatar
+        if (navUserAvatar && userEmail) {
+            fetch('/current-user', {
+                headers: {
+                    'x-email': userEmail
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.profileImage) {
+                    navUserAvatar.src = data.profileImage;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching user data:', error);
+            });
+        }
+    }
+
     // Notes list and view modal elements
     const notesList = document.getElementById('notesList');
     const viewNoteModal = document.getElementById('viewNoteModal');
@@ -30,19 +70,11 @@ document.addEventListener('DOMContentLoaded', () => {
         navLinks.classList.toggle('active');
     });
 
-    const username = localStorage.getItem('username');
-
-    if (!username) {
-        // Redirect to login page if not logged in
-        window.location.href = '/login.html';
-        return;
-    }
-
     fetchNotes();
 
     saveNoteBtn.addEventListener('click', async () => {
         const contentValue = noteContent.value.trim();
-        const nameValue = document.getElementById('noteName').value.trim(); // Directly get the value
+        const nameValue = noteName.value.trim();
 
         if (contentValue && nameValue) {
             try {
@@ -56,7 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 if (response.ok) {
-                    // Redirect to the notes list page after saving
                     window.location.href = '/note.html';
                 } else {
                     alert('Failed to save note. Please try again.');
@@ -69,28 +100,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // login logout
-    const loginLink = document.getElementById('loginLink');
-    const logoutLink = document.getElementById('logoutLink');
-    if (username) {
-        loginLink.style.display = 'none';
-        logoutLink.style.display = 'block';
-    } else {
-        loginLink.style.display = 'block';
-        logoutLink.style.display = 'none';
-    }
-
     async function fetchNotes() {
+        // Show loading state
+        notesList.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Loading existing notes...</p></div>';
+        
         try {
             const response = await fetch(`/api/notes?username=${username}`);
             if (response.ok) {
                 const notes = await response.json();
-                displayNotes(notes);
+                // Sort notes by last modified date (newest first)
+                const sortedNotes = notes.sort((a, b) => {
+                    const dateA = new Date(a.updatedAt || a.createdAt);
+                    const dateB = new Date(b.updatedAt || b.createdAt);
+                    return dateB - dateA; // Descending order (newest first)
+                });
+                displayNotes(sortedNotes);
             } else {
                 console.error('Failed to fetch notes');
+                notesList.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-circle"></i><p>Failed to load notes. Please try again.</p></div>';
             }
         } catch (error) {
             console.error('Error fetching notes:', error);
+            notesList.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-circle"></i><p>Error loading notes. Please check your connection.</p></div>';
         }
     }
 
@@ -98,35 +129,38 @@ document.addEventListener('DOMContentLoaded', () => {
         notesList.innerHTML = '';
         notes.forEach(note => {
             const noteElement = document.createElement('div');
-            noteElement.classList.add('note-item');
+            noteElement.classList.add('note-card');
             const noteName = note.noteName || 'Untitled Note';
             noteElement.innerHTML = `
-                <h3>${noteName}</h3>
-                <hr>
-                <div class="note-footer">
-                    <small class="author">By: ${note.username}</small>
-                    <div class="footer-right">
-                        <small class="date">${new Date(note.createdAt).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok', hour12: false })}</small>
+                <div class="note-card-content">
+                    <div class="note-title">${noteName}</div>
+                    <div class="note-footer">
+                        <div class="note-meta">
+                            <span>By: ${note.username}</span>
+                            <span>${new Date(note.createdAt).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok', hour12: false })}</span>
+                        </div>
                         <div class="note-actions">
-                            <button class="edit-note-btn" data-id="${note._id}" data-name="${noteName}"><i class="fas fa-edit"></i></button>
-                            <button class="delete-note-btn" data-id="${note._id}"><i class="fas fa-trash"></i></button>
+                            <button class="note-btn edit-btn" data-id="${note._id}" data-name="${noteName}"><i class="fas fa-edit"></i></button>
+                            <button class="note-btn delete-btn" data-id="${note._id}"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
                 </div>
             `;
             noteElement.addEventListener('click', (e) => {
-                const deleteButton = e.target.closest('.delete-note-btn');
-                const editButton = e.target.closest('.edit-note-btn');
+                const deleteButton = e.target.closest('.delete-btn');
+                const editButton = e.target.closest('.edit-btn');
 
                 if (deleteButton) {
+                    e.stopPropagation();
                     showDeleteModal(deleteButton.dataset.id);
                 } else if (editButton) {
+                    e.stopPropagation();
                     const noteContent = notes.find(n => n._id === editButton.dataset.id).content;
                     showEditModal(editButton.dataset.id, editButton.dataset.name, noteContent);
                 } else {
-                    viewNoteName.textContent = noteName;
-                    viewNoteContent.innerHTML = note.content.replace(/\n/g, '<br>');
-                    viewNoteModal.style.display = 'flex';
+                    // Click on card - open edit modal
+                    const noteContent = note.content;
+                    showEditModal(note._id, noteName, noteContent);
                 }
             });
             notesList.appendChild(noteElement);
@@ -135,15 +169,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showEditModal(noteId, noteName, content) {
         currentNoteId = noteId;
-        editNoteName.value = noteName;
-        editNoteTextarea.value = content;
-        editNoteModal.style.display = 'flex';
         
-        // Fetch and display edit history
-        fetchNoteHistory(noteId);
+        // Show modal with loading state
+        editNoteModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        // Show loading state
+        editNoteName.value = 'Loading...';
+        editNoteTextarea.value = 'Loading note content...';
+        editNoteName.readOnly = true;
+        editNoteTextarea.readOnly = true;
+        
+        // Show loading in history
+        const editHistoryList = document.getElementById('editHistoryList');
+        if (editHistoryList) {
+            editHistoryList.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Loading history...</p></div>';
+        }
+        
+        // Clear footer info
+        const editNoteAuthor = document.getElementById('editNoteAuthor');
+        const editNoteLastEdited = document.getElementById('editNoteLastEdited');
+        if (editNoteAuthor) editNoteAuthor.textContent = '';
+        if (editNoteLastEdited) editNoteLastEdited.textContent = '';
         
         setTimeout(() => {
             editNoteModal.classList.add('active');
+            
+            // Load actual content
+            editNoteName.value = noteName;
+            editNoteTextarea.value = content;
+            editNoteName.readOnly = false;
+            editNoteTextarea.readOnly = false;
+            
+            // Fetch and display edit history
+            fetchNoteHistory(noteId);
         }, 10);
     }
 
@@ -152,6 +211,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('deletePassword').value = '';
         document.getElementById('deleteError').style.display = 'none';
         deleteConfirmModal.style.display = 'flex';
+        
+        // Lock body scroll
+        document.body.style.overflow = 'hidden';
+        
         setTimeout(() => {
             deleteConfirmModal.classList.add('active');
         }, 10);
@@ -159,6 +222,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function closeViewModal() {
         viewNoteModal.classList.remove('active');
+        
+        // Unlock body scroll
+        document.body.style.overflow = '';
+        
         setTimeout(() => {
             viewNoteModal.style.display = 'none';
         }, 300);
@@ -254,6 +321,9 @@ document.addEventListener('DOMContentLoaded', () => {
         currentNoteId = null;
         editNoteModal.style.display = 'none';
         editNoteModal.classList.remove('active');
+        
+        // Unlock body scroll
+        document.body.style.overflow = '';
     }
 
     function closeDeleteModal() {
@@ -261,6 +331,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('deletePassword').value = '';
         document.getElementById('deleteError').style.display = 'none';
         deleteConfirmModal.style.display = 'none';
+        
+        // Unlock body scroll
+        document.body.style.overflow = '';
     }
 
     confirmDeleteBtn.addEventListener('click', deleteNote);
@@ -286,9 +359,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const editHistoryList = document.getElementById('editHistoryList');
         editHistoryList.innerHTML = '';
         
+        // Update author and editor info in footer
+        const editNoteAuthor = document.getElementById('editNoteAuthor');
+        const editNoteLastEdited = document.getElementById('editNoteLastEdited');
+        
+        if (editNoteAuthor && editNoteLastEdited) {
+            editNoteAuthor.textContent = `By: ${note.username}`;
+            
+            // Get last editor from editHistory if lastEditedBy is null
+            let lastEditor = note.lastEditedBy;
+            if (!lastEditor && note.editHistory && note.editHistory.length > 0) {
+                const sortedHistory = [...note.editHistory].sort((a, b) => new Date(b.editedAt) - new Date(a.editedAt));
+                lastEditor = sortedHistory[0].editedBy;
+            }
+            
+            if (lastEditor && note.lastEditedAt) {
+                editNoteLastEdited.textContent = `edited ${lastEditor} date ${new Date(note.lastEditedAt).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok', hour12: false })}`;
+            } else if (note.createdAt) {
+                editNoteLastEdited.textContent = `date ${new Date(note.createdAt).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok', hour12: false })}`;
+            }
+        }
+        
         // Add current version option
         const currentVersionItem = document.createElement('div');
-        currentVersionItem.classList.add('history-item');
+        currentVersionItem.classList.add('history-item', 'current-version');
         currentVersionItem.style.cursor = 'pointer';
         currentVersionItem.style.backgroundColor = '#e7f3ff';
         currentVersionItem.style.border = '1px solid #b3d9ff';
@@ -310,6 +404,28 @@ document.addEventListener('DOMContentLoaded', () => {
             editNoteName.value = note.noteName || '';
             editNoteTextarea.value = note.content || '';
             
+            // Enable editing for current version
+            editNoteName.readOnly = false;
+            editNoteTextarea.readOnly = false;
+            saveEditedNoteBtn.style.display = 'inline-block';
+            
+            // Update footer info for current version
+            if (editNoteAuthor && editNoteLastEdited) {
+                editNoteAuthor.textContent = `By: ${note.username}`;
+                
+                let lastEditor = note.lastEditedBy;
+                if (!lastEditor && note.editHistory && note.editHistory.length > 0) {
+                    const sortedHistory = [...note.editHistory].sort((a, b) => new Date(b.editedAt) - new Date(a.editedAt));
+                    lastEditor = sortedHistory[0].editedBy;
+                }
+                
+                if (lastEditor && note.lastEditedAt) {
+                    editNoteLastEdited.textContent = `edited ${lastEditor} date ${new Date(note.lastEditedAt).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok', hour12: false })}`;
+                } else if (note.createdAt) {
+                    editNoteLastEdited.textContent = `date ${new Date(note.createdAt).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok', hour12: false })}`;
+                }
+            }
+            
             // Remove 'active' class from previously selected item
             const currentActive = document.querySelector('.history-item.active');
             if (currentActive) {
@@ -319,6 +435,8 @@ document.addEventListener('DOMContentLoaded', () => {
             currentVersionItem.classList.add('active');
         });
         
+        // Set current version as active by default
+        currentVersionItem.classList.add('active');
         editHistoryList.appendChild(currentVersionItem);
         
         if (!note.editHistory || note.editHistory.length === 0) {
@@ -330,7 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         sortedHistory.forEach((history, index) => {
             const historyItem = document.createElement('div');
-            historyItem.classList.add('history-item');
+            historyItem.classList.add('history-item', 'history-version');
             historyItem.style.cursor = 'pointer';
             
             const editDate = new Date(history.editedAt).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok', hour12: false });
@@ -338,22 +456,33 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Calculate version number for this history item
             const totalVersions = sortedHistory.length + 1; // +1 for current version
-            const versionNumber = totalVersions - index; // Reverse order (newest gets highest number)
+            const versionNumber = totalVersions - index - 1; // Reverse order (newest gets highest number)
             
             historyItem.innerHTML = `
                 <div class="history-content">
+                    <p><strong>Version ${versionNumber}</strong></p>
+                    <p><strong>${editDate}</strong></p>
                     <p><strong>Title:</strong> ${history.noteName}</p>
-                    <p><strong>Modified by</strong> ${history.editedBy}</p>
-                    <p><strong>${editDate} (V.${versionNumber})</strong></p>
-                    <p><strong>By</strong> ${history.editedBy}</p>
+                    <p><strong>By:</strong> ${history.editedBy}</p>
                 </div>
             `;
             
-            // Add click event to load historical content into edit form
+            // Add click event to load historical content (read-only)
             historyItem.addEventListener('click', () => {
-                // Load historical version into edit form
+                // Load historical version into edit form (read-only)
                 editNoteName.value = history.noteName || '';
                 editNoteTextarea.value = history.content || '';
+                
+                // Disable editing for historical versions
+                editNoteName.readOnly = true;
+                editNoteTextarea.readOnly = true;
+                saveEditedNoteBtn.style.display = 'none';
+                
+                // Update footer info for historical version
+                if (editNoteAuthor && editNoteLastEdited) {
+                    editNoteAuthor.textContent = `By: ${history.editedBy}`;
+                    editNoteLastEdited.textContent = `date ${new Date(history.editedAt).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok', hour12: false })} (Historical Version)`;
+                }
                 
                 // Remove 'active' class from previously selected item
                 const currentActive = document.querySelector('.history-item.active');

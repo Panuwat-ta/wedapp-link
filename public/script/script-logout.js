@@ -1,6 +1,53 @@
 document.addEventListener('DOMContentLoaded', () => {
     const menuToggle = document.getElementById('menuToggle');
     const navLinks = document.getElementById('navLinks');
+    
+    const isLoggedIn = localStorage.getItem('username');
+    const userEmail = localStorage.getItem('email');
+    
+    // Redirect to login if not logged in
+    if (!isLoggedIn) {
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    const loginLink = document.getElementById('loginLink');
+    const logoutLink = document.getElementById('logoutLink');
+    const navUsername = document.getElementById('navUsername');
+    const navUserAvatar = document.getElementById('navUserAvatar');
+    
+    if (loginLink && logoutLink) {
+        if (isLoggedIn) {
+            loginLink.style.display = 'none';
+            logoutLink.style.display = 'flex';
+            
+            // Update username in navbar
+            if (navUsername) {
+                navUsername.textContent = isLoggedIn;
+            }
+            
+            // Fetch and update user avatar
+            if (navUserAvatar && userEmail) {
+                fetch('/current-user', {
+                    headers: {
+                        'x-email': userEmail
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.profileImage) {
+                        navUserAvatar.src = data.profileImage;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching user data:', error);
+                });
+            }
+        } else {
+            loginLink.style.display = 'flex';
+            logoutLink.style.display = 'none';
+        }
+    }
 
     menuToggle.addEventListener('click', () => {
         navLinks.classList.toggle('active');
@@ -276,6 +323,9 @@ function showEditProfileModal() {
     `;
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Lock body scroll
+    document.body.style.overflow = 'hidden';
 
     // Preview image when URL changes
     const imageUrlInput = document.getElementById('editProfileImage');
@@ -384,6 +434,10 @@ function closeEditProfileModal() {
     const modal = document.getElementById('editProfileModal');
     if (modal) {
         modal.classList.remove('active');
+        
+        // Unlock body scroll
+        document.body.style.overflow = '';
+        
         setTimeout(() => {
             modal.remove();
         }, 300);
@@ -499,17 +553,24 @@ function passwordPrompt(message, callback) {
     `;
 
     document.body.appendChild(promptBox);
+    
+    // Lock body scroll
+    document.body.style.overflow = 'hidden';
 
     const passwordInput = promptBox.querySelector('.password-input');
     passwordInput.focus();
 
     promptBox.querySelector('.cancel-btn').addEventListener('click', () => {
+        // Unlock body scroll
+        document.body.style.overflow = '';
         promptBox.remove();
         callback(null);
     });
 
     promptBox.querySelector('.confirm-btn').addEventListener('click', () => {
         const password = passwordInput.value;
+        // Unlock body scroll
+        document.body.style.overflow = '';
         promptBox.remove();
         callback(password);
     });

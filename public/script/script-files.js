@@ -7,17 +7,16 @@ let API_KEY, CLIENT_ID, FOLDER_ID;
 let allFiles = [];
 let cachedAllFiles = [];
 let currentView = 'list'; // 'list' or 'grid'
+let folderSelect, typeSelect; // DOM elements
 
 // View toggle functionality
 document.getElementById('listViewBtn').addEventListener('click', () => {
     if (currentView !== 'list') {
         currentView = 'list';
-        document.getElementById('fileList').style.display = 'block';
+        document.querySelector('.list-view-container').style.display = 'block';
         document.getElementById('gridView').classList.remove('active');
         document.getElementById('listViewBtn').classList.add('active');
         document.getElementById('gridViewBtn').classList.remove('active');
-        // Show file list description when switching to list view
-        document.querySelector('.file-list-description').style.display = 'flex';
         displayFiles(allFiles);
     }
 });
@@ -25,12 +24,10 @@ document.getElementById('listViewBtn').addEventListener('click', () => {
 document.getElementById('gridViewBtn').addEventListener('click', () => {
     if (currentView !== 'grid') {
         currentView = 'grid';
-        document.getElementById('fileList').style.display = 'none';
+        document.querySelector('.list-view-container').style.display = 'none';
         document.getElementById('gridView').classList.add('active');
         document.getElementById('listViewBtn').classList.remove('active');
         document.getElementById('gridViewBtn').classList.add('active');
-        // Hide file list description when switching to grid view
-        document.querySelector('.file-list-description').style.display = 'none';
         displayFiles(allFiles);
     }
 });
@@ -49,6 +46,51 @@ async function fetchEnvVariables() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Initialize DOM elements
+    folderSelect = document.getElementById('folderSelect');
+    typeSelect = document.getElementById('typeSelect');
+    
+    // Check login status and update navbar
+    const username = localStorage.getItem('username');
+    const userEmail = localStorage.getItem('email');
+    const loginLink = document.getElementById('loginLink');
+    const logoutLink = document.getElementById('logoutLink');
+    const navUsername = document.getElementById('navUsername');
+    const navUserAvatar = document.getElementById('navUserAvatar');
+    
+    if (loginLink && logoutLink) {
+        if (username) {
+            loginLink.style.display = 'none';
+            logoutLink.style.display = 'flex';
+            
+            // Update username in navbar
+            if (navUsername) {
+                navUsername.textContent = username;
+            }
+            
+            // Fetch and update user avatar
+            if (navUserAvatar && userEmail) {
+                fetch('/current-user', {
+                    headers: {
+                        'x-email': userEmail
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.profileImage) {
+                        navUserAvatar.src = data.profileImage;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching user data:', error);
+                });
+            }
+        } else {
+            loginLink.style.display = 'flex';
+            logoutLink.style.display = 'none';
+        }
+    }
+
     try {
         const env = await fetchEnvVariables();
         API_KEY = env.API_KEY;
@@ -56,7 +98,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         FOLDER_ID = env.FOLDER_ID;
 
         loadGapiClient();
-        updateNavLinks(!!localStorage.getItem('username'));
     } catch (error) {
         console.error('Failed to initialize application:', error);
         showError(error);
@@ -226,46 +267,43 @@ function displayListView(files) {
 
         const fileName = document.createElement('div');
         fileName.className = 'file-name';
-        fileName.setAttribute('data-label', 'File Name:');
         fileName.innerHTML = `
-            <div class="file-icon">${getFileIcon(file.mimeType)}</div>
+            ${getFileIcon(file.mimeType)}
             <span>${file.name}</span>
         `;
 
         const fileOrigin = document.createElement('div');
         fileOrigin.className = 'file-origin';
-        fileOrigin.setAttribute('data-label', 'Folder:');
-        fileOrigin.innerHTML = `<span>${getParentFolderName(file.parents)}</span>`;
+        fileOrigin.textContent = getParentFolderName(file.parents);
 
         const fileDate = document.createElement('div');
         fileDate.className = 'file-date';
-        fileDate.setAttribute('data-label', 'Upload Date:');
-        fileDate.innerHTML = `<span>${formatDate(file.modifiedTime)}</span>`;
+        fileDate.textContent = formatDate(file.modifiedTime);
 
         const fileSize = document.createElement('div');
         fileSize.className = 'file-size';
-        fileSize.setAttribute('data-label', 'Size:');
-        fileSize.innerHTML = `<span>${file.size ? formatFileSize(file.size) : 'N/A'}</span>`;
+        fileSize.textContent = file.size ? formatFileSize(file.size) : 'N/A';
 
-        const actionButtons = document.createElement('div');
-        actionButtons.className = 'file-actions-mobile';
-
+        const fileView = document.createElement('div');
+        fileView.className = 'file-view';
         const viewLink = document.createElement('a');
         viewLink.href = file.webViewLink;
         viewLink.className = 'file-link';
         viewLink.target = '_blank';
         viewLink.innerHTML = '<i class="fas fa-external-link-alt"></i> View';
+        fileView.appendChild(viewLink);
 
+        const fileDownload = document.createElement('div');
+        fileDownload.className = 'file-download-table';
         const downloadBtn = createDownloadButton(file);
-
-        actionButtons.appendChild(viewLink);
-        actionButtons.appendChild(downloadBtn);
+        fileDownload.appendChild(downloadBtn);
 
         fileItem.appendChild(fileName);
         fileItem.appendChild(fileOrigin);
         fileItem.appendChild(fileDate);
         fileItem.appendChild(fileSize);
-        fileItem.appendChild(actionButtons);
+        fileItem.appendChild(fileView);
+        fileItem.appendChild(fileDownload);
 
         fileList.appendChild(fileItem);
     });
@@ -365,7 +403,7 @@ function createDownloadButton(file, isGrid = false) {
     if (file.mimeType === 'application/vnd.google-apps.folder') {
         downloadButton.className = 'file-download';
         downloadButton.href = '#';
-        downloadButton.innerHTML = isGrid ? '<i class="fas fa-file-archive"></i> Download' : 'Download <i class="fas fa-file-archive"></i>';
+        downloadButton.innerHTML = '<i class="fas fa-download"></i> Download';
         downloadButton.onclick = async (e) => {
             e.preventDefault();
             await downloadFolderAsZip(file);
@@ -386,13 +424,13 @@ function createDownloadButton(file, isGrid = false) {
         downloadButton.className = 'file-download';
         downloadButton.target = '_blank';
         downloadButton.download = file.name;
-        downloadButton.innerHTML = isGrid ? '<i class="fas fa-download"></i> Download' : 'Download <i class="fas fa-download"></i>';
+        downloadButton.innerHTML = '<i class="fas fa-download"></i> Download';
     } else {
         downloadButton.href = `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${API_KEY}`;
         downloadButton.className = 'file-download';
         downloadButton.target = '_blank';
         downloadButton.download = file.name;
-        downloadButton.innerHTML = isGrid ? '<i class="fas fa-download"></i> Download' : 'Download <i class="fas fa-download"></i>';
+        downloadButton.innerHTML = '<i class="fas fa-download"></i> Download';
     }
 
     return downloadButton;
@@ -604,7 +642,6 @@ function startProgressPolling() {
         }
     }, 1000);
 }
-
 function showError(error) {
     console.error('Error:', error);
     const fileList = document.getElementById('fileList');
@@ -621,66 +658,57 @@ function showError(error) {
     document.getElementById('fileCount').textContent = 'Error';
 }
 
-function updateNavLinks(isLoggedIn) {
-    const loginLink = document.getElementById('loginLink');
-    const logoutLink = document.getElementById('logoutLink');
-    
-    if (!loginLink || !logoutLink) return;
-    
-    if (isLoggedIn) {
-        loginLink.style.display = 'none';
-        logoutLink.style.display = 'block';
-    } else {
-        loginLink.style.display = 'block';
-        logoutLink.style.display = 'none';
-    }
-}
-
-// Initialize elements
-const folderSelect = document.getElementById('folderSelect');
-const typeSelect = document.getElementById('typeSelect');
+// Add event listeners for filters
 const searchBox = document.getElementById('searchBox');
 
 // Add event listeners
-folderSelect.addEventListener('change', async () => {
-    showLoadingFiles();
-    const selectedFolder = folderSelect.value;
-    if (selectedFolder === 'all') {
-        allFiles = [...cachedAllFiles];
-        displayFiles(allFiles);
-        return;
-    }
+document.addEventListener('DOMContentLoaded', () => {
+    if (folderSelect) {
+        folderSelect.addEventListener('change', async () => {
+            showLoadingFiles();
+            const selectedFolder = folderSelect.value;
+            if (selectedFolder === 'all') {
+                allFiles = [...cachedAllFiles];
+                displayFiles(allFiles);
+                return;
+            }
 
-    const query = `'${selectedFolder}' in parents`;
-    try {
-        const response = await gapi.client.drive.files.list({
-            q: query,
-            fields: 'files(id, name, webViewLink, mimeType, modifiedTime, parents, size)',
-            pageSize: 1000,
-            orderBy: 'modifiedTime desc'
+            const query = `'${selectedFolder}' in parents`;
+            
+            try {
+                const response = await gapi.client.drive.files.list({
+                    q: query,
+                    fields: 'files(id, name, webViewLink, mimeType, modifiedTime, parents, size)',
+                    orderBy: 'name'
+                });
+                allFiles = response.result.files;
+                displayFiles(allFiles);
+            } catch (error) {
+                console.error('Error fetching folder files:', error);
+                showError(error);
+            }
         });
-
-        allFiles = response.result.files;
-        displayFiles(allFiles);
-    } catch (error) {
-        showError(error);
-    }
-});
-
-typeSelect.addEventListener('change', () => {
-    showLoadingFiles();
-    displayFiles(allFiles);
-});
-
-searchBox.addEventListener('input', () => {
-    const searchTerm = searchBox.value.toLowerCase();
-    if (searchTerm === '') {
-        displayFiles(allFiles);
-        return;
     }
 
-    const filteredFiles = allFiles.filter(file => 
-        file.name.toLowerCase().includes(searchTerm)
-    );
-    displayFiles(filteredFiles);
+    if (typeSelect) {
+        typeSelect.addEventListener('change', () => {
+            showLoadingFiles();
+            displayFiles(allFiles);
+        });
+    }
+
+    if (searchBox) {
+        searchBox.addEventListener('input', () => {
+            const searchTerm = searchBox.value.toLowerCase();
+            if (searchTerm === '') {
+                displayFiles(allFiles);
+                return;
+            }
+
+            const filteredFiles = allFiles.filter(file => 
+                file.name.toLowerCase().includes(searchTerm)
+            );
+            displayFiles(filteredFiles);
+        });
+    }
 });

@@ -1,33 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 
 <head>
     <meta charset="UTF-8">
     <link rel="icon" type="image/svg+xml" href="/img/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Drive Files</title>
+    <title>Google Drive Files - Data Links</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/styles/theme.css">
+    <link rel="stylesheet" href="/styles/navbar.css">
     <link rel="stylesheet" href="/styles/styles-files.css">
+    <script src="/script/theme-manager.js"></script>
+    <script src="/script/mobile-menu.js"></script>
     <script src="/script/script-files.js" defer></script>
 </head>
 
 <body>
-    <nav>
+            <nav>
         <div class="nav-container">
+            <a href="./index.html" class="nav-brand">
+                <i class="fas fa-link"></i>
+                <span>Data Links</span>
+            </a>
+            
             <button class="menu-toggle" id="menuToggle">
                 <i class="fas fa-bars"></i>
             </button>
+            
             <div class="nav-links" id="navLinks">
                 <a href="./index.html"><i class="fas fa-home"></i> Home</a>
                 <a href="./files.html" class="active"><i class="fas fa-folder-open"></i> Files</a>
                 <a href="./date.html"><i class="fas fa-calendar-alt"></i> Update</a>
                 <a href="./upload.html"><i class="fas fa-cloud-upload-alt"></i> Upload</a>
-                <a href="./note.html"><i class="fas fa-sticky-note"></i> View Notes</a>
+                <a href="./note.html"><i class="fas fa-sticky-note"></i> Notes</a>
                 <a href="./add-note.html"><i class="fas fa-plus"></i> Add Note</a>
                 <a href="./about.html"><i class="fas fa-info-circle"></i> About</a>
                 <a href="./suport.html"><i class="fas fa-hand-holding-heart"></i> Support</a>
-                <a href="./login.html" id="loginLink"><i class="fas fa-sign-in-alt"></i> Login</a>
-                <a href="./logout.html" id="logoutLink" style="display: none;"><i class="fas fa-user"></i> Profile</a>
+            </div>
+            
+            <div class="nav-user" id="navUser">
+                <a href="./login.html" id="loginLink" class="user-profile">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Login</span>
+                </a>
+                <a href="./logout.html" id="logoutLink" class="user-profile" style="display: none;">
+                    <img src="/img/b1.jpg" alt="User" class="user-avatar-nav" id="navUserAvatar">
+                    <span class="user-name" id="navUsername">Member</span>
+                </a>
+                <button class="theme-toggle-nav" onclick="toggleTheme()" title="Toggle Theme">
+                    <i class="fas fa-moon"></i>
+                </button>
             </div>
         </div>
     </nav>
@@ -69,29 +91,33 @@
             </div>
 
             <!-- List View -->
-            <div class="file-list-description">
-                <div class="file-name"><strong>File Name</strong></div>
-                <div class="file-origin"><strong>Folder</strong></div>
-                <div class="file-date"><strong>Upload Date</strong></div>
-                <div class="file-size"><strong>Size</strong></div>
-                <div class="file-view"><strong>View</strong></div>
-                <div class="file-download-table"><strong>Download</strong></div>
-            </div>
+            <div class="list-view-container">
+                <div class="file-list-description">
+                    <div class="file-name"><strong>File Name</strong></div>
+                    <div class="file-origin"><strong>Folder</strong></div>
+                    <div class="file-date"><strong>Upload Date</strong></div>
+                    <div class="file-size"><strong>Size</strong></div>
+                    <div class="file-view"><strong>View</strong></div>
+                    <div class="file-download-table"><strong>Download</strong></div>
+                </div>
 
-            <div id="fileList">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>Loading files...</p>
+                <div id="fileList">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Loading files...</p>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Grid View -->
-        <div id="gridView" class="grid-view">
-            <div class="grid-container" id="gridContainer"></div>
+            <!-- Grid View -->
+            <div id="gridView" class="grid-view">
+                <div class="grid-container" id="gridContainer"></div>
+            </div>
         </div>
     </div>
     </div>
+
+    
 
     <script src="https://apis.google.com/js/api.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>

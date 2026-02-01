@@ -4,6 +4,46 @@ document.addEventListener('DOMContentLoaded', () => {
     const menuToggle = document.getElementById('menuToggle');
     const navLinks = document.getElementById('navLinks');
 
+    const isLoggedIn = localStorage.getItem('username');
+    const userEmail = localStorage.getItem('email');
+    const loginLink = document.getElementById('loginLink');
+    const logoutLink = document.getElementById('logoutLink');
+    const navUsername = document.getElementById('navUsername');
+    const navUserAvatar = document.getElementById('navUserAvatar');
+    
+    if (loginLink && logoutLink) {
+        if (isLoggedIn) {
+            loginLink.style.display = 'none';
+            logoutLink.style.display = 'flex';
+            
+            // Update username in navbar
+            if (navUsername) {
+                navUsername.textContent = isLoggedIn;
+            }
+            
+            // Fetch and update user avatar
+            if (navUserAvatar && userEmail) {
+                fetch('/current-user', {
+                    headers: {
+                        'x-email': userEmail
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.profileImage) {
+                        navUserAvatar.src = data.profileImage;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching user data:', error);
+                });
+            }
+        } else {
+            loginLink.style.display = 'flex';
+            logoutLink.style.display = 'none';
+        }
+    }
+
 
     // View Modal elements
     const viewNoteModal = document.getElementById('viewNoteModal');
@@ -27,16 +67,27 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchNotes();
 
     async function fetchNotes() {
+        // Show loading state
+        notesList.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Loading your notes...</p></div>';
+        
         try {
             const response = await fetch(`/api/notes?username=${username}`);
             if (response.ok) {
                 const notes = await response.json();
-                displayNotes(notes);
+                // Sort notes by last modified date (newest first)
+                const sortedNotes = notes.sort((a, b) => {
+                    const dateA = new Date(a.updatedAt || a.createdAt);
+                    const dateB = new Date(b.updatedAt || b.createdAt);
+                    return dateB - dateA; // Descending order (newest first)
+                });
+                displayNotes(sortedNotes);
             } else {
                 console.error('Failed to fetch notes');
+                notesList.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-circle"></i><p>Failed to load notes. Please try again.</p></div>';
             }
         } catch (error) {
             console.error('Error fetching notes:', error);
+            notesList.innerHTML = '<div class="error-message"><i class="fas fa-exclamation-circle"></i><p>Error loading notes. Please check your connection.</p></div>';
         }
     }
 
@@ -44,22 +95,33 @@ document.addEventListener('DOMContentLoaded', () => {
         notesList.innerHTML = '';
         notes.forEach(note => {
             const noteElement = document.createElement('div');
-            noteElement.classList.add('note-item');
+            noteElement.classList.add('note-card');
             const noteName = note.noteName || 'Untitled Note';
             
+            // Get last editor from editHistory if lastEditedBy is null
+            let lastEditor = note.lastEditedBy;
+            if (!lastEditor && note.editHistory && note.editHistory.length > 0) {
+                const sortedHistory = [...note.editHistory].sort((a, b) => new Date(b.editedAt) - new Date(a.editedAt));
+                lastEditor = sortedHistory[0].editedBy;
+            }
+            
             noteElement.innerHTML = `
-                <h3>${noteName}</h3>
-                <div class="note-footer">
-                    <div class="author-line">By: ${note.username}</div>
-                    <div class="edited-line">edited: ${note.lastEditedBy || note.username}</div>
-                    <div class="date-line">${new Date(note.lastEditedAt || note.createdAt).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok', hour12: false })}</div>
+                <div class="note-title">${noteName}</div>
+                <div class="note-meta">
+                    <div>By: ${note.username}</div>
+                    <div>edited: ${lastEditor || note.username}</div>
+                    <div>${new Date(note.lastEditedAt || note.createdAt).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok', hour12: false })}</div>
                 </div>
             `;
-            noteElement.addEventListener('click', (e) => {
-                if (!e.target.closest('button')) {
-                    viewNote(note);
-                }
+            
+            // Add click event to entire card
+            noteElement.addEventListener('click', () => {
+                viewNote(note);
             });
+            
+            // Add cursor pointer style
+            noteElement.style.cursor = 'pointer';
+            
             notesList.appendChild(noteElement);
         });
     }
@@ -67,29 +129,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function viewNote(note) {
         try {
-            // Show loading state
-            viewNoteContent.textContent = 'Loading...';
-            
-            // Start showing modal immediately for better perceived performance
+            // Show modal with loading state immediately
             viewNoteModal.style.display = 'flex';
-            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            document.body.style.overflow = 'hidden';
             
-            // Force reflow to ensure the element is in the render tree
+            // Show loading in content area
+            viewNoteName.textContent = 'Loading...';
+            viewNoteContent.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Loading note...</p></div>';
+            
+            // Clear history list
+            const editHistoryList = document.getElementById('editHistoryList');
+            if (editHistoryList) {
+                editHistoryList.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+            }
+            
+            // Add history toggle button and overlay for mobile
+            if (window.innerWidth <= 768) {
+                if (!document.querySelector('.history-toggle')) {
+                    const toggleBtn = document.createElement('button');
+                    toggleBtn.className = 'history-toggle';
+                    toggleBtn.innerHTML = '<i class="fas fa-history"></i>';
+                    toggleBtn.onclick = toggleHistoryDrawer;
+                    viewNoteModal.querySelector('.modal-content').appendChild(toggleBtn);
+                    
+                    const overlay = document.createElement('div');
+                    overlay.className = 'history-overlay';
+                    overlay.onclick = closeHistoryDrawer;
+                    viewNoteModal.querySelector('.modal-content').appendChild(overlay);
+                }
+            }
+            
+            // Force reflow
             void viewNoteModal.offsetWidth;
             
             // Start loading data
             if (note) {
-                // Reset any historical styling
-                viewNoteContent.style.backgroundColor = '';
-                viewNoteContent.style.border = '';
-                viewNoteContent.style.padding = '';
-                viewNoteContent.style.borderRadius = '';
-                
-                // Remove any historical indicator
-                const historicalIndicator = viewNoteContent.parentNode.querySelector('.historical-indicator');
-                if (historicalIndicator) {
-                    historicalIndicator.remove();
+                // Remove historical banner if exists
+                const existingBanner = document.querySelector('.historical-banner');
+                if (existingBanner) {
+                    existingBanner.remove();
                 }
+                
+                // Remove historical class from content
+                viewNoteContent.classList.remove('historical');
                 
                 // Update content
                 viewNoteName.textContent = note.noteName || 'Untitled Note';
@@ -100,11 +182,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 const noteLastEdited = document.getElementById('noteLastEdited');
                 
                 noteAuthor.textContent = `By: ${note.username}`;
+                noteLastEdited.classList.remove('viewing-historical');
                 
-                if (note.lastEditedBy && note.lastEditedAt) {
-                    noteLastEdited.textContent = `edited ${note.lastEditedBy} date ${new Date(note.lastEditedAt).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok', hour12: false })}`;
-                } else {
+                // Get last editor from editHistory if lastEditedBy is null
+                let lastEditor = note.lastEditedBy;
+                if (!lastEditor && note.editHistory && note.editHistory.length > 0) {
+                    // Sort by editedAt to get the most recent
+                    const sortedHistory = [...note.editHistory].sort((a, b) => new Date(b.editedAt) - new Date(a.editedAt));
+                    lastEditor = sortedHistory[0].editedBy;
+                }
+                
+                // Always show edited info if available
+                if (lastEditor && note.lastEditedAt) {
+                    noteLastEdited.textContent = `edited ${lastEditor} date ${new Date(note.lastEditedAt).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok', hour12: false })}`;
+                } else if (note.createdAt) {
                     noteLastEdited.textContent = `date ${new Date(note.createdAt).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok', hour12: false })}`;
+                } else {
+                    noteLastEdited.textContent = '';
                 }
                 
                 // Display edit history
@@ -134,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Error viewing note:', error);
-            viewNoteContent.innerHTML = 'Failed to load note. Please try again.';
+            viewNoteContent.innerHTML = '<div class="error-message">Failed to load note. Please try again.</div>';
         }
     }
 
@@ -142,26 +236,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const editHistoryList = document.getElementById('editHistoryList');
         editHistoryList.innerHTML = '';
         
+        // Calculate total versions
+        const totalVersions = (note.editHistory ? note.editHistory.length : 0) + 1;
+        
         // Add current version option
         const currentVersionItem = document.createElement('div');
-        currentVersionItem.classList.add('history-item');
-        currentVersionItem.style.cursor = 'pointer';
-        currentVersionItem.style.backgroundColor = '#e7f3ff';
-        currentVersionItem.style.border = '1px solid #b3d9ff';
-        
-        const currentDate = new Date().toLocaleString('en-GB', { timeZone: 'Asia/Bangkok', hour12: false });
-        // Calculate edit count (current version number)
-        const editCount = (note.editHistory ? note.editHistory.length : 0) + 1;
+        currentVersionItem.classList.add('history-item', 'active');
         
         currentVersionItem.innerHTML = `
-            <div class="history-content">
-                <p><strong>Current Version</strong> #${editCount}</p>
-                <p><strong>${new Date().toLocaleString('en-GB', { timeZone: 'Asia/Bangkok', hour12: false })}</strong></p>
-                <p><strong>Title:</strong> ${note.noteName}</p>
-            </div>
+            <div class="history-item-header">Current Version #${totalVersions}</div>
+            <div class="history-item-meta">${new Date().toLocaleString('en-GB', { timeZone: 'Asia/Bangkok', hour12: false })}</div>
+            <div class="history-item-meta"><strong>Title:</strong> ${note.noteName}</div>
         `;
         
         currentVersionItem.addEventListener('click', () => {
+            // Remove active class from all items
+            document.querySelectorAll('.history-item').forEach(item => item.classList.remove('active'));
+            currentVersionItem.classList.add('active');
             viewNote(note);
         });
         
@@ -177,93 +268,58 @@ document.addEventListener('DOMContentLoaded', () => {
         sortedHistory.forEach((history, index) => {
             const historyItem = document.createElement('div');
             historyItem.classList.add('history-item');
-            historyItem.style.cursor = 'pointer';
             
             const editDate = new Date(history.editedAt).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok', hour12: false });
-            const editType = history.editType === 'original' ? 'Created' : 'Modified';
-            
-            // Calculate version number for this history item
-            const totalVersions = sortedHistory.length + 1; // +1 for current version
-            const versionNumber = totalVersions - index; // Reverse order (newest gets highest number)
-            
-            // Calculate newly added content
-            let addedContent = '';
-            if (history.editType === 'original') {
-                // For original, show first 50 characters
-                const firstLine = history.content.split('\n')[0].trim();
-                addedContent = firstLine.length > 50 ? firstLine.substring(0, 50) + '...' : firstLine;
-            } else {
-                // For modified, calculate what was added by comparing with the next newer version
-                const nextHistory = sortedHistory[index - 1]; // Next newer version
-                if (nextHistory) {
-                    // Compare this history with the next newer one to see what was added
-                    addedContent = getAddedContent(history.content, nextHistory.content);
-                } else {
-                    // If no next version, compare with current content
-                    addedContent = getAddedContent(history.content, note.content);
-                }
-            }
+            const versionNumber = totalVersions - index - 1;
             
             historyItem.innerHTML = `
-                <div class="history-content">
-                    <p><strong>Title:</strong> ${history.noteName}</p>
-                    <p><strong>Modified by</strong> ${history.editedBy}</p>
-                    <p><strong>${editDate} (V.${versionNumber})</strong></p>
-                    <p><strong>By</strong> ${history.editedBy}</p>
-                </div>
+                <div class="history-item-header">Title: ${history.noteName}</div>
+                <div class="history-item-meta"><strong>Modified by</strong> ${history.editedBy}</div>
+                <div class="history-item-meta">${editDate} (V.${versionNumber})</div>
+                <div class="history-item-meta"><strong>By</strong> ${history.editedBy}</div>
             `;
             
             // Add click event to show historical content
             historyItem.addEventListener('click', () => {
-                // Remove 'active' class from previously selected item
-                const currentActive = document.querySelector('.history-item.active');
-                if (currentActive) {
-                    currentActive.classList.remove('active');
-                }
-                // Add 'active' class to the clicked item
+                // Remove active class from all items
+                document.querySelectorAll('.history-item').forEach(item => item.classList.remove('active'));
                 historyItem.classList.add('active');
-                showHistoricalNote(history, editType);
+                showHistoricalNote(history);
             });
             
             editHistoryList.appendChild(historyItem);
         });
     }
 
-    function showHistoricalNote(history, editType) {
+    function showHistoricalNote(history) {
         // Update the main note view with historical content
         viewNoteName.textContent = history.noteName || 'Untitled Note';
+        
+        // Add historical banner
+        const existingBanner = document.querySelector('.historical-banner');
+        if (existingBanner) {
+            existingBanner.remove();
+        }
+        
+        const banner = document.createElement('div');
+        banner.className = 'historical-banner';
+        banner.innerHTML = '<i class="fas fa-history"></i> <strong>Historical Version</strong> - Click on another history item to view different versions';
+        
+        const noteMain = document.querySelector('.note-main');
+        const h2 = noteMain.querySelector('h2');
+        h2.after(banner);
+        
+        // Update content with historical background
         viewNoteContent.innerHTML = history.content.replace(/\n/g, '<br>');
+        viewNoteContent.classList.add('historical');
         
         // Update author and last edited info for historical version
         const noteAuthor = document.getElementById('noteAuthor');
         const noteLastEdited = document.getElementById('noteLastEdited');
         
         noteAuthor.textContent = `By: ${history.editedBy}`;
-        noteLastEdited.textContent = `Viewing historical version - ${new Date(history.editedAt).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok', hour12: false })}`;
-        
-        // Add visual indication that this is a historical version
-        viewNoteContent.style.backgroundColor = '#fff3cd';
-        viewNoteContent.style.border = '1px solid #ffeaa7';
-        viewNoteContent.style.padding = '15px';
-        viewNoteContent.style.borderRadius = '5px';
-        
-        // Add a small note about historical view
-        const historicalNote = document.createElement('div');
-        historicalNote.style.backgroundColor = '#fff3cd';
-        historicalNote.style.color = '#856404';
-        historicalNote.style.padding = '10px';
-        historicalNote.style.borderRadius = '5px';
-        historicalNote.style.marginBottom = '10px';
-        historicalNote.style.fontSize = '0.9rem';
-        historicalNote.innerHTML = '<strong>📚 Historical Version</strong> - Click on another history item to view different versions';
-        
-        // Insert historical note before content
-        const parent = viewNoteContent.parentNode;
-        if (parent.querySelector('.historical-indicator')) {
-            parent.querySelector('.historical-indicator').remove();
-        }
-        historicalNote.className = 'historical-indicator';
-        parent.insertBefore(historicalNote, viewNoteContent);
+        noteLastEdited.textContent = `date ${new Date(history.editedAt).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok', hour12: false })} (Historical Version)`;
+        noteLastEdited.classList.add('viewing-historical');
     }
 
     function getAddedContent(oldContent, newContent) {
@@ -327,7 +383,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function closeViewModal() {
-        // Start closing animation
+        // Hide modal immediately
+        viewNoteModal.style.display = 'none';
         viewNoteModal.classList.remove('active');
         document.body.style.overflow = ''; // Re-enable scrolling
         
@@ -337,32 +394,98 @@ document.addEventListener('DOMContentLoaded', () => {
             viewNoteModal._keyDownHandler = null;
         }
         
-        // Wait for animation to complete before hiding
-        setTimeout(() => {
-            if (!viewNoteModal.classList.contains('active')) {
-                viewNoteModal.style.display = 'none';
-                // Reset scroll position for next open
-                viewNoteContent.scrollTop = 0;
-            }
-        }, 300);
+        // Reset scroll position
+        viewNoteContent.scrollTop = 0;
     }
 
     closeViewBtn.addEventListener('click', closeViewModal);
+    
+    // Copy note content button
+    const copyNoteBtn = document.getElementById('copyNoteBtn');
+    if (copyNoteBtn) {
+        copyNoteBtn.addEventListener('click', async () => {
+            const noteContent = document.getElementById('viewNoteContent');
+            if (noteContent) {
+                try {
+                    // Get text content (without HTML tags)
+                    const textToCopy = noteContent.innerText || noteContent.textContent;
+                    
+                    // Copy to clipboard
+                    await navigator.clipboard.writeText(textToCopy);
+                    
+                    // Show success feedback
+                    const originalHTML = copyNoteBtn.innerHTML;
+                    copyNoteBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    copyNoteBtn.style.backgroundColor = 'var(--success-color)';
+                    
+                    setTimeout(() => {
+                        copyNoteBtn.innerHTML = originalHTML;
+                        copyNoteBtn.style.backgroundColor = '';
+                    }, 2000);
+                } catch (err) {
+                    console.error('Failed to copy:', err);
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = noteContent.innerText || noteContent.textContent;
+                    textArea.style.position = 'fixed';
+                    textArea.style.left = '-999999px';
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    try {
+                        document.execCommand('copy');
+                        const originalHTML = copyNoteBtn.innerHTML;
+                        copyNoteBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                        copyNoteBtn.style.backgroundColor = 'var(--success-color)';
+                        setTimeout(() => {
+                            copyNoteBtn.innerHTML = originalHTML;
+                            copyNoteBtn.style.backgroundColor = '';
+                        }, 2000);
+                    } catch (err2) {
+                        console.error('Fallback copy failed:', err2);
+                        alert('Failed to copy text');
+                    }
+                    document.body.removeChild(textArea);
+                }
+            }
+        });
+    }
 
     viewNoteModal.addEventListener('click', (e) => {
         if (e.target === viewNoteModal) {
             closeViewModal();
         }
     });
+});
 
-    // login logout
-    const loginLink = document.getElementById('loginLink');
-    const logoutLink = document.getElementById('logoutLink');
-    if (username) {
-        loginLink.style.display = 'none';
-        logoutLink.style.display = 'block';
-    } else {
-        loginLink.style.display = 'block';
-        logoutLink.style.display = 'none';
+
+// Toggle history drawer on mobile
+function toggleHistoryDrawer() {
+    const noteHistory = document.querySelector('.note-history');
+    const toggleBtn = document.querySelector('.history-toggle');
+    const overlay = document.querySelector('.history-overlay');
+    
+    if (noteHistory && toggleBtn && overlay) {
+        noteHistory.classList.toggle('open');
+        toggleBtn.classList.toggle('open');
+        overlay.classList.toggle('active');
+    }
+}
+
+function closeHistoryDrawer() {
+    const noteHistory = document.querySelector('.note-history');
+    const toggleBtn = document.querySelector('.history-toggle');
+    const overlay = document.querySelector('.history-overlay');
+    
+    if (noteHistory && toggleBtn && overlay) {
+        noteHistory.classList.remove('open');
+        toggleBtn.classList.remove('open');
+        overlay.classList.remove('active');
+    }
+}
+
+// Close drawer when selecting a history item on mobile
+document.addEventListener('click', (e) => {
+    if (e.target.closest('.history-item') && window.innerWidth <= 768) {
+        closeHistoryDrawer();
     }
 });

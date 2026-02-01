@@ -89,6 +89,8 @@ function customConfirm(message, callback) {
 
 // Custom edit dialog function
 function customEditDialog(currentName, currentUrl, callback) {
+    console.log('customEditDialog called with:', currentName, currentUrl);
+    
     const editBox = document.createElement('div');
     editBox.className = 'password-prompt';
     editBox.innerHTML = `
@@ -128,7 +130,12 @@ function customEditDialog(currentName, currentUrl, callback) {
         </div>
     `;
 
+    console.log('Appending editBox to body');
     document.body.appendChild(editBox);
+    console.log('editBox appended, checking if visible');
+    console.log('editBox display:', window.getComputedStyle(editBox).display);
+    console.log('editBox visibility:', window.getComputedStyle(editBox).visibility);
+    console.log('editBox opacity:', window.getComputedStyle(editBox).opacity);
 
     // ตัวเลือกการแก้ไข
     const editNameBtn = editBox.querySelector('#editNameBtn');
@@ -281,12 +288,22 @@ async function loadLinks() {
             const editBtn = document.createElement('button');
             editBtn.className = 'action-btn edit-btn';
             editBtn.innerHTML = '<i class="fas fa-edit"></i>';
-            editBtn.addEventListener('click', () => editLink(_id, name, url));
+            editBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Edit button clicked for:', _id, name, url);
+                editLink(_id, name, url);
+            });
 
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'action-btn delete-btn';
             deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-            deleteBtn.addEventListener('click', () => deleteLink(_id));
+            deleteBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Delete button clicked for:', _id);
+                deleteLink(_id);
+            });
 
             linkDetails.appendChild(linkName);
             linkDetails.appendChild(linkDate);
@@ -401,27 +418,40 @@ function passwordPrompt(message, callback) {
 
 // Edit link function
 async function editLink(id, currentName, currentUrl) {
-    if (isSpecialUser()) {
-        customEditDialog(currentName, currentUrl, (result) => {
-            if (result) {
-                editLinkRequest(id, result.newName, result.newUrl);
-            }
-        });
-    } else {
-        passwordPrompt('Please enter password to edit link:', (password) => {
-            const correctPassword = 'panuwat';
+    try {
+        console.log('editLink called with:', id, currentName, currentUrl);
+        console.log('isSpecialUser:', isSpecialUser());
+        
+        if (isSpecialUser()) {
+            console.log('User is special, showing edit dialog directly');
+            console.log('About to call customEditDialog');
+            console.log('customEditDialog type:', typeof customEditDialog);
+            customEditDialog(currentName, currentUrl, (result) => {
+                console.log('Edit dialog result:', result);
+                if (result) {
+                    editLinkRequest(id, result.newName, result.newUrl);
+                }
+            });
+            console.log('customEditDialog called');
+        } else {
+            console.log('User is not special, showing password prompt');
+            passwordPrompt('Please enter password to edit link:', (password) => {
+                const correctPassword = 'panuwat';
 
-            if (password === null) return;
-            if (password === correctPassword) {
-                customEditDialog(currentName, currentUrl, (result) => {
-                    if (result) {
-                        editLinkRequest(id, result.newName, result.newUrl);
-                    }
-                });
-            } else {
-                alertBox('Incorrect password', 'error');
-            }
-        });
+                if (password === null) return;
+                if (password === correctPassword) {
+                    customEditDialog(currentName, currentUrl, (result) => {
+                        if (result) {
+                            editLinkRequest(id, result.newName, result.newUrl);
+                        }
+                    });
+                } else {
+                    alertBox('Incorrect password', 'error');
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Error in editLink:', error);
     }
 }
 
@@ -513,15 +543,52 @@ document.getElementById('add-link-form').addEventListener('submit', function (ev
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
+    // Load links and user profile
     loadLinks();
     fetchUserProfile();
-});
-
-// Check login status when page loads
-document.addEventListener('DOMContentLoaded', function () {
-    const isLoggedIn = localStorage.getItem('username') ? true : false;
-    updateNavLinks(isLoggedIn);
-    fetchDailyVisitors();
+    
+    // Check login status
+    const isLoggedIn = localStorage.getItem('username');
+    const userEmail = localStorage.getItem('email');
+    const loginLink = document.getElementById('loginLink');
+    const logoutLink = document.getElementById('logoutLink');
+    const navUsername = document.getElementById('navUsername');
+    const navUserAvatar = document.getElementById('navUserAvatar');
+    
+    if (loginLink && logoutLink) {
+        if (isLoggedIn) {
+            loginLink.style.display = 'none';
+            logoutLink.style.display = 'flex';
+            
+            // Update username in navbar
+            if (navUsername) {
+                navUsername.textContent = isLoggedIn;
+            }
+            
+            // Fetch and update user avatar
+            if (navUserAvatar && userEmail) {
+                fetch('/current-user', {
+                    headers: {
+                        'x-email': userEmail
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.profileImage) {
+                        navUserAvatar.src = data.profileImage;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching user data:', error);
+                });
+            }
+        } else {
+            loginLink.style.display = 'flex';
+            logoutLink.style.display = 'none';
+        }
+    }
+    
+    updateNavLinks(isLoggedIn ? true : false);
 });
 
 // Update Login/Logout link display

@@ -212,8 +212,15 @@ async function resetPassword() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Check login status on page load
+    // Check if user is already logged in
     const isLoggedIn = localStorage.getItem('username') !== null;
+    
+    // If logged in, redirect to profile page
+    if (isLoggedIn) {
+        window.location.href = 'logout.html';
+        return;
+    }
+    
     updateNavLinks(isLoggedIn);
 
     // Menu toggle for mobile
