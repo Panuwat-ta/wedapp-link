@@ -11,7 +11,7 @@ function setActive(element) {
 function isSpecialUser() {
     const username = localStorage.getItem('currentUsername') || localStorage.getItem('username') || '';
     const email = localStorage.getItem('currentUserEmail') || localStorage.getItem('email') || '';
-    return username === 'panuwat' && email === 'panuwat@gmail.com';
+    return username === 'panuwat' && email === 'panuwattakham2002@gmail.com';
 }
 
 // Custom prompt function
@@ -219,19 +219,38 @@ function customEditDialog(currentName, currentUrl, callback) {
 }
 
 // Alert box function
-function alertBox(message, type) {
-    const alertBox = document.createElement('div');
-    alertBox.className = `alert-box ${type}`;
-    alertBox.textContent = message;
+function alertBox(message, type = 'info') {
+    console.log('alertBox called:', message, type);
+    const alertElement = document.getElementById('alertBox');
+    if (!alertElement) {
+        console.error('Alert box element not found.');
+        return;
+    }
+    
+    console.log('Alert element found, showing message');
+    alertElement.textContent = message;
+    alertElement.className = `alert-box ${type}`;
+    
+    // Remove any existing timeout
+    if (alertElement.hideTimeout) {
+        clearTimeout(alertElement.hideTimeout);
+    }
+    
+    // Reset styles and show
+    alertElement.style.opacity = '1';
+    alertElement.style.transform = 'translateX(0)';
+    alertElement.style.display = 'block';
+    alertElement.style.pointerEvents = 'auto';
 
-    document.body.appendChild(alertBox);
-
-    setTimeout(() => {
-        alertBox.classList.add('fade-out');
+    // Hide after 5 seconds
+    alertElement.hideTimeout = setTimeout(() => {
+        alertElement.style.opacity = '0';
+        alertElement.style.transform = 'translateX(400px)';
         setTimeout(() => {
-            alertBox.remove();
-        }, 500);
-    }, 2000);
+            alertElement.style.display = 'none';
+            alertElement.style.pointerEvents = 'none';
+        }, 300);
+    }, 5000);
 }
 
 // Load all links from the server
@@ -395,13 +414,14 @@ async function saveLink(url, name) {
     }
 }
 
-// Password prompt function
-function passwordPrompt(message, callback) {
+// Password prompt function with validation
+function passwordPrompt(message, callback, isRetry = false) {
     const promptBox = document.createElement('div');
     promptBox.className = 'password-prompt';
     promptBox.innerHTML = `
         <div class="prompt-content">
             <h3>${message}</h3>
+            ${isRetry ? '<p class="error-message" style="color: var(--error-color); font-size: 0.9rem; margin-bottom: 10px;">Incorrect password. Please try again.</p>' : ''}
             <input type="password" class="password-input" placeholder="Enter password" autocomplete="off">
             <div class="prompt-buttons">
                 <button class="cancel-btn">Cancel</button>
@@ -413,40 +433,37 @@ function passwordPrompt(message, callback) {
     document.body.appendChild(promptBox);
     
     // Add to history for back button support
-    history.pushState({ modal: 'passwordPrompt' }, '');
-    console.log('Password prompt opened with history support');
+    if (!isRetry) {
+        history.pushState({ modal: 'passwordPrompt' }, '');
+        console.log('Password prompt opened with history support');
+    }
 
     const passwordInput = promptBox.querySelector('.password-input');
     passwordInput.focus();
 
-    promptBox.querySelector('.cancel-btn').addEventListener('click', () => {
+    const handleCancel = () => {
         // Remove from history if it was added
         if (window.history.state && window.history.state.modal === 'passwordPrompt') {
             history.back();
         }
         promptBox.remove();
         callback(null);
-    });
+    };
 
-    promptBox.querySelector('.confirm-btn').addEventListener('click', () => {
+    const handleConfirm = () => {
         const password = passwordInput.value;
-        // Remove from history if it was added
-        if (window.history.state && window.history.state.modal === 'passwordPrompt') {
-            history.back();
-        }
         promptBox.remove();
         callback(password);
-    });
+    };
+
+    promptBox.querySelector('.cancel-btn').addEventListener('click', handleCancel);
+    promptBox.querySelector('.confirm-btn').addEventListener('click', handleConfirm);
 
     passwordInput.addEventListener('keyup', (e) => {
         if (e.key === 'Enter') {
-            const password = passwordInput.value;
-            // Remove from history if it was added
-            if (window.history.state && window.history.state.modal === 'passwordPrompt') {
-                history.back();
-            }
-            promptBox.remove();
-            callback(password);
+            handleConfirm();
+        } else if (e.key === 'Escape') {
+            handleCancel();
         }
     });
 }
@@ -470,20 +487,29 @@ async function editLink(id, currentName, currentUrl) {
             console.log('customEditDialog called');
         } else {
             console.log('User is not special, showing password prompt');
-            passwordPrompt('Please enter password to edit link:', (password) => {
-                const correctPassword = 'panuwat';
+            const checkPassword = (isRetry = false) => {
+                passwordPrompt('Please enter password to edit link:', (password) => {
+                    const correctPassword = 'panuwat';
 
-                if (password === null) return;
-                if (password === correctPassword) {
-                    customEditDialog(currentName, currentUrl, (result) => {
-                        if (result) {
-                            editLinkRequest(id, result.newName, result.newUrl);
-                        }
-                    });
-                } else {
-                    alertBox('Incorrect password', 'error');
-                }
-            });
+                    if (password === null) {
+                        return;
+                    }
+                    if (password === correctPassword) {
+                        // Don't call history.back() here, let customEditDialog handle it
+                        setTimeout(() => {
+                            customEditDialog(currentName, currentUrl, (result) => {
+                                if (result) {
+                                    editLinkRequest(id, result.newName, result.newUrl);
+                                }
+                            });
+                        }, 100);
+                    } else {
+                        // รหัสผ่านผิด - แสดง prompt ใหม่พร้อมข้อความแจ้งเตือน
+                        setTimeout(() => checkPassword(true), 100);
+                    }
+                }, isRetry);
+            };
+            checkPassword();
         }
     } catch (error) {
         console.error('Error in editLink:', error);
@@ -492,27 +518,47 @@ async function editLink(id, currentName, currentUrl) {
 
 // Delete link function
 async function deleteLink(id) {
+    console.log('deleteLink called with id:', id);
+    console.log('isSpecialUser:', isSpecialUser());
+    
     if (isSpecialUser()) {
+        console.log('Special user - showing confirm dialog');
         customConfirm('Are you sure you want to delete this link?', (confirmed) => {
+            console.log('Confirm result:', confirmed);
             if (confirmed) {
                 deleteLinkRequest(id);
             }
         });
     } else {
-        passwordPrompt('Please enter password to delete link:', (password) => {
-            const correctPassword = 'panuwat';
+        console.log('Not special user - showing password prompt');
+        const checkPassword = (isRetry = false) => {
+            passwordPrompt('Please enter password to delete link:', (password) => {
+                console.log('Password entered:', password ? 'yes' : 'no');
+                const correctPassword = 'panuwat';
 
-            if (password === null) return;
-            if (password === correctPassword) {
-                customConfirm('Are you sure you want to delete this link?', (confirmed) => {
-                    if (confirmed) {
-                        deleteLinkRequest(id);
-                    }
-                });
-            } else {
-                alertBox('Incorrect password', 'error');
-            }
-        });
+                if (password === null) {
+                    console.log('Password cancelled');
+                    return;
+                }
+                if (password === correctPassword) {
+                    console.log('Password correct - showing confirm dialog');
+                    // Don't call history.back() here, let customConfirm handle it
+                    setTimeout(() => {
+                        customConfirm('Are you sure you want to delete this link?', (confirmed) => {
+                            console.log('Confirm result:', confirmed);
+                            if (confirmed) {
+                                deleteLinkRequest(id);
+                            }
+                        });
+                    }, 100);
+                } else {
+                    console.log('Password incorrect - showing prompt again');
+                    // รหัสผ่านผิด - แสดง prompt ใหม่พร้อมข้อความแจ้งเตือน
+                    setTimeout(() => checkPassword(true), 100);
+                }
+            }, isRetry);
+        };
+        checkPassword();
     }
 }
 
@@ -545,15 +591,19 @@ async function editLinkRequest(id, newName, newUrl) {
 
 // Delete link request
 async function deleteLinkRequest(id) {
+    console.log('deleteLinkRequest called with id:', id);
     try {
         const response = await fetch(`/delete-link/${id}`, {
             method: 'DELETE',
         });
 
+        console.log('Delete response status:', response.status);
         if (response.ok) {
+            console.log('Delete successful, reloading links');
             loadLinks();
             alertBox('Link deleted successfully!', 'success');
         } else {
+            console.error('Delete failed:', response.status);
             alertBox('Failed to delete link', 'error');
         }
     } catch (error) {

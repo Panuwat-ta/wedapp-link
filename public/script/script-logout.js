@@ -66,20 +66,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Handle back button for modals
-    window.addEventListener('popstate', function(e) {
-        const editModal = document.getElementById('editProfileModal');
-        const passwordPrompt = document.querySelector('.password-prompt');
-        
-        if (editModal && editModal.classList.contains('active')) {
-            e.preventDefault();
-            closeEditProfileModal();
-        } else if (passwordPrompt) {
-            e.preventDefault();
-            document.body.style.overflow = '';
-            passwordPrompt.remove();
-        }
-    });
+    const deleteAccountButton = document.getElementById('deleteAccountButton');
+    if (deleteAccountButton) {
+        deleteAccountButton.addEventListener('click', showDeleteAccountModal);
+    }
+    
+    // Check for active delete verification session
+    checkDeleteVerificationSession();
+    
+    // Handle back button for modals - now handled by modal-history.js
 });
 
 function setActive(element) {
@@ -337,8 +332,10 @@ function showEditProfileModal() {
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     
-    // Add to history for back button support
-    history.pushState({ modal: 'editProfile' }, '');
+    const modal = document.getElementById('editProfileModal');
+    
+    // Use Modal History Manager
+    openModalWithHistory(modal, closeEditProfileModal);
     
     // Lock body scroll
     document.body.style.overflow = 'hidden';
@@ -451,17 +448,15 @@ function closeEditProfileModal() {
     if (modal) {
         modal.classList.remove('active');
         
-        // Remove from history if it was added
-        if (window.history.state && window.history.state.modal === 'editProfile') {
-            history.back();
-        }
+        // Use Modal History Manager
+        closeModalWithHistory();
         
         // Unlock body scroll
         document.body.style.overflow = '';
         
         setTimeout(() => {
             modal.remove();
-        }, 300);
+        }, 150);
     }
 }
 
@@ -575,8 +570,12 @@ function passwordPrompt(message, callback) {
 
     document.body.appendChild(promptBox);
     
-    // Add to history for back button support
-    history.pushState({ modal: 'passwordPrompt' }, '');
+    // Use Modal History Manager
+    openModalWithHistory(promptBox, () => {
+        document.body.style.overflow = '';
+        promptBox.remove();
+        callback(null);
+    });
     
     // Lock body scroll
     document.body.style.overflow = 'hidden';
@@ -585,10 +584,8 @@ function passwordPrompt(message, callback) {
     passwordInput.focus();
 
     promptBox.querySelector('.cancel-btn').addEventListener('click', () => {
-        // Remove from history if it was added
-        if (window.history.state && window.history.state.modal === 'passwordPrompt') {
-            history.back();
-        }
+        // Use Modal History Manager
+        closeModalWithHistory();
         // Unlock body scroll
         document.body.style.overflow = '';
         promptBox.remove();
@@ -597,10 +594,8 @@ function passwordPrompt(message, callback) {
 
     promptBox.querySelector('.confirm-btn').addEventListener('click', () => {
         const password = passwordInput.value;
-        // Remove from history if it was added
-        if (window.history.state && window.history.state.modal === 'passwordPrompt') {
-            history.back();
-        }
+        // Use Modal History Manager
+        closeModalWithHistory();
         // Unlock body scroll
         document.body.style.overflow = '';
         promptBox.remove();
@@ -610,12 +605,598 @@ function passwordPrompt(message, callback) {
     passwordInput.addEventListener('keyup', (e) => {
         if (e.key === 'Enter') {
             const password = passwordInput.value;
-            // Remove from history if it was added
-            if (window.history.state && window.history.state.modal === 'passwordPrompt') {
-                history.back();
-            }
+            // Use Modal History Manager
+            closeModalWithHistory();
             promptBox.remove();
             callback(password);
         }
     });
+}
+
+
+// Delete Account Functions
+let deleteAccountEmail = '';
+let deleteVerificationCode = '';
+let deleteTimerInterval = null;
+let deleteExpirationTime = null;
+
+// Check if there's an active delete verification session on page load
+function checkDeleteVerificationSession() {
+    const savedEmail = localStorage.getItem('deleteAccountEmail');
+    const savedExpiration = localStorage.getItem('deleteExpirationTime');
+    
+    if (savedEmail && savedExpiration) {
+        const expirationTime = parseInt(savedExpiration);
+        const now = Date.now();
+        
+        // Check if session is still valid (not expired)
+        if (expirationTime > now) {
+            deleteAccountEmail = savedEmail;
+            deleteExpirationTime = expirationTime;
+            
+            // Show modal after a short delay to ensure DOM is ready
+            setTimeout(() => {
+                showDeleteVerificationModal();
+            }, 50);
+        } else {
+            // Clear expired session
+            localStorage.removeItem('deleteAccountEmail');
+            localStorage.removeItem('deleteExpirationTime');
+        }
+    }
+}
+
+function showDeleteAccountModal() {
+    const currentEmail = localStorage.getItem('email') || '';
+    
+    const modalHTML = `
+        <div class="delete-account-modal active" id="deleteAccountModal">
+            <div class="delete-modal-content">
+                <div class="delete-modal-header">
+                    <h2><i class="fas fa-exclamation-triangle"></i> Delete Account</h2>
+                </div>
+                <div class="delete-warning">
+                    <p><i class="fas fa-warning"></i> Warning: This action cannot be undone. All your data will be permanently deleted.</p>
+                </div>
+                <div class="delete-form-group">
+                    <label for="deleteEmailInput">Confirm your Gmail address</label>
+                    <input type="email" id="deleteEmailInput" value="${currentEmail}" placeholder="Enter your Gmail" required>
+                </div>
+                <div class="delete-modal-actions">
+                    <button type="button" class="delete-cancel-btn" id="cancelDeleteAccount">Cancel</button>
+                    <button type="button" class="delete-send-btn" id="sendDeleteCode">Send Verification Code</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    const modal = document.getElementById('deleteAccountModal');
+    
+    // Use Modal History Manager
+    openModalWithHistory(modal, closeDeleteAccountModal);
+    
+    document.body.style.overflow = 'hidden';
+
+    const cancelButton = document.getElementById('cancelDeleteAccount');
+    if (cancelButton) {
+        cancelButton.addEventListener('click', closeDeleteAccountModal);
+    }
+
+    const sendButton = document.getElementById('sendDeleteCode');
+    if (sendButton) {
+        sendButton.addEventListener('click', sendDeleteVerificationCode);
+    }
+}
+
+function closeDeleteAccountModal() {
+    const modal = document.getElementById('deleteAccountModal');
+    if (modal) {
+        modal.classList.remove('active');
+        
+        // Use Modal History Manager
+        closeModalWithHistory();
+        
+        document.body.style.overflow = '';
+        setTimeout(() => {
+            modal.remove();
+        }, 150);
+    }
+}
+
+async function sendDeleteVerificationCode() {
+    const emailInput = document.getElementById('deleteEmailInput');
+    const email = emailInput.value.trim();
+    const sendButton = document.getElementById('sendDeleteCode');
+
+    if (!email) {
+        alertBox('Please enter your Gmail address', 'error');
+        return;
+    }
+
+    // Validate Gmail format
+    const gmailRegex = /^[a-zA-Z0-9._-]{6,30}@gmail\.com$/;
+    if (!gmailRegex.test(email)) {
+        alertBox('Please enter a valid Gmail address', 'error');
+        return;
+    }
+
+    // Check if email matches current user
+    const currentEmail = localStorage.getItem('email');
+    if (email !== currentEmail) {
+        alertBox('Email does not match your account', 'error');
+        return;
+    }
+
+    // Disable button and show loading
+    if (sendButton) {
+        sendButton.disabled = true;
+        sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+    }
+
+    try {
+        const response = await fetch('/send-delete-verification', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            deleteAccountEmail = email;
+            deleteVerificationCode = data.code;
+            deleteExpirationTime = Date.now() + 3 * 60 * 1000; // 3 minutes
+            
+            // Save to localStorage for persistence across page refreshes
+            localStorage.setItem('deleteAccountEmail', email);
+            localStorage.setItem('deleteExpirationTime', deleteExpirationTime.toString());
+            
+            // Get modal reference before closing
+            const modal = document.getElementById('deleteAccountModal');
+            
+            // Close modal properly
+            if (modal) {
+                modal.classList.remove('active');
+                closeModalWithHistory();
+                
+                // Wait a bit for modal to start closing
+                setTimeout(() => {
+                    document.body.style.overflow = '';
+                    modal.remove();
+                    
+                    // Show verification modal after old modal is removed
+                    setTimeout(() => {
+                        showDeleteVerificationModal();
+                        alertBox('Verification code sent to your Gmail', 'success');
+                    }, 50);
+                }, 100);
+            } else {
+                // If no modal found, show verification immediately
+                showDeleteVerificationModal();
+                alertBox('Verification code sent to your Gmail', 'success');
+            }
+        } else {
+            alertBox(data.message || 'Failed to send verification code', 'error');
+            // Re-enable button on error
+            if (sendButton) {
+                sendButton.disabled = false;
+                sendButton.innerHTML = 'Send Verification Code';
+            }
+        }
+    } catch (error) {
+        console.error('Error sending verification code:', error);
+        alertBox('An error occurred while sending verification code', 'error');
+        // Re-enable button on error
+        if (sendButton) {
+            sendButton.disabled = false;
+            sendButton.innerHTML = 'Send Verification Code';
+        }
+    }
+}
+
+function showDeleteVerificationModal() {
+    // Remove any existing modal first
+    const existingModal = document.getElementById('deleteVerifyModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Calculate remaining time immediately
+    const now = Date.now();
+    const remaining = Math.max(0, deleteExpirationTime - now);
+    const minutes = Math.floor(remaining / 60000);
+    const seconds = Math.floor((remaining % 60000) / 1000);
+    const initialTime = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    
+    // Check if already expired
+    const isExpired = remaining === 0;
+    
+    const modalHTML = `
+        <div class="delete-verify-modal active" id="deleteVerifyModal">
+            <div class="delete-verify-content">
+                <h2><i class="fas fa-shield-alt"></i> Verify Account Deletion</h2>
+                <p>Enter the 6-character code sent to:</p>
+                <p class="delete-verify-email">${deleteAccountEmail}</p>
+                <div class="delete-otp-container">
+                    <input type="text" class="delete-otp-box" maxlength="1" data-index="0">
+                    <input type="text" class="delete-otp-box" maxlength="1" data-index="1">
+                    <input type="text" class="delete-otp-box" maxlength="1" data-index="2">
+                    <input type="text" class="delete-otp-box" maxlength="1" data-index="3">
+                    <input type="text" class="delete-otp-box" maxlength="1" data-index="4">
+                    <input type="text" class="delete-otp-box" maxlength="1" data-index="5">
+                </div>
+                <div class="delete-timer ${isExpired ? 'expired' : ''}" id="deleteTimer">${isExpired ? 'Expired' : initialTime}</div>
+                <button class="delete-resend-btn" id="deleteResendBtn" ${isExpired ? '' : 'disabled'}>Resend Code</button>
+                <div class="delete-verify-actions">
+                    <button type="button" class="delete-verify-cancel-btn" id="cancelDeleteVerify">Cancel</button>
+                    <button type="button" class="delete-verify-btn" id="verifyDeleteBtn">Delete Account</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    const modal = document.getElementById('deleteVerifyModal');
+    
+    // Use Modal History Manager with custom close function that goes back to delete account modal
+    openModalWithHistory(modal, closeDeleteVerificationAndShowPrevious);
+    
+    document.body.style.overflow = 'hidden';
+
+    // Setup OTP inputs
+    setupDeleteOTPInputs();
+
+    // Start timer only if not expired
+    if (!isExpired) {
+        startDeleteTimer();
+    }
+
+    const cancelButton = document.getElementById('cancelDeleteVerify');
+    if (cancelButton) {
+        cancelButton.addEventListener('click', closeDeleteVerificationAndShowPrevious);
+    }
+
+    const verifyButton = document.getElementById('verifyDeleteBtn');
+    if (verifyButton) {
+        verifyButton.addEventListener('click', verifyDeleteAccount);
+    }
+
+    const resendButton = document.getElementById('deleteResendBtn');
+    if (resendButton) {
+        resendButton.addEventListener('click', resendDeleteCode);
+    }
+
+    // Focus first input
+    const firstInput = document.querySelector('.delete-otp-box[data-index="0"]');
+    if (firstInput) {
+        firstInput.focus();
+    }
+}
+
+// Close verification modal and show delete account modal
+function closeDeleteVerificationAndShowPrevious() {
+    const modal = document.getElementById('deleteVerifyModal');
+    if (modal) {
+        modal.classList.remove('active');
+        
+        // Use Modal History Manager
+        closeModalWithHistory();
+        
+        if (deleteTimerInterval) {
+            clearInterval(deleteTimerInterval);
+            deleteTimerInterval = null;
+        }
+        
+        // Clear localStorage when closing modal
+        localStorage.removeItem('deleteAccountEmail');
+        localStorage.removeItem('deleteExpirationTime');
+        
+        // Reset delete variables
+        const savedEmail = deleteAccountEmail;
+        deleteAccountEmail = '';
+        deleteVerificationCode = '';
+        deleteExpirationTime = null;
+        
+        setTimeout(() => {
+            modal.remove();
+            document.body.style.overflow = '';
+            
+            // Show delete account modal again after a short delay
+            setTimeout(() => {
+                showDeleteAccountModalWithEmail(savedEmail);
+            }, 50);
+        }, 150);
+    }
+}
+
+// Show delete account modal with pre-filled email
+function showDeleteAccountModalWithEmail(email = '') {
+    const currentEmail = email || localStorage.getItem('email') || '';
+    
+    const modalHTML = `
+        <div class="delete-account-modal active" id="deleteAccountModal">
+            <div class="delete-modal-content">
+                <div class="delete-modal-header">
+                    <h2><i class="fas fa-exclamation-triangle"></i> Delete Account</h2>
+                </div>
+                <div class="delete-warning">
+                    <p><i class="fas fa-warning"></i> Warning: This action cannot be undone. All your data will be permanently deleted.</p>
+                </div>
+                <div class="delete-form-group">
+                    <label for="deleteEmailInput">Confirm your Gmail address</label>
+                    <input type="email" id="deleteEmailInput" value="${currentEmail}" placeholder="Enter your Gmail" required>
+                </div>
+                <div class="delete-modal-actions">
+                    <button type="button" class="delete-cancel-btn" id="cancelDeleteAccount">Cancel</button>
+                    <button type="button" class="delete-send-btn" id="sendDeleteCode">Send Verification Code</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    const modal = document.getElementById('deleteAccountModal');
+    
+    // Use Modal History Manager
+    openModalWithHistory(modal, closeDeleteAccountModal);
+    
+    document.body.style.overflow = 'hidden';
+
+    const cancelButton = document.getElementById('cancelDeleteAccount');
+    if (cancelButton) {
+        cancelButton.addEventListener('click', closeDeleteAccountModal);
+    }
+
+    const sendButton = document.getElementById('sendDeleteCode');
+    if (sendButton) {
+        sendButton.addEventListener('click', sendDeleteVerificationCode);
+    }
+}
+
+function closeDeleteVerificationModal() {
+    const modal = document.getElementById('deleteVerifyModal');
+    if (modal) {
+        modal.classList.remove('active');
+        
+        // Use Modal History Manager
+        closeModalWithHistory();
+        
+        document.body.style.overflow = '';
+        
+        if (deleteTimerInterval) {
+            clearInterval(deleteTimerInterval);
+            deleteTimerInterval = null;
+        }
+        
+        // Clear localStorage when closing modal
+        localStorage.removeItem('deleteAccountEmail');
+        localStorage.removeItem('deleteExpirationTime');
+        
+        // Reset delete variables
+        deleteAccountEmail = '';
+        deleteVerificationCode = '';
+        deleteExpirationTime = null;
+        
+        setTimeout(() => {
+            modal.remove();
+        }, 150);
+    }
+}
+
+function setupDeleteOTPInputs() {
+    const otpBoxes = document.querySelectorAll('.delete-otp-box');
+
+    otpBoxes.forEach((box, index) => {
+        box.addEventListener('input', (e) => {
+            const value = e.target.value.toUpperCase();
+            
+            // Only allow A-Z and 0-9
+            if (!/^[A-Z0-9]$/.test(value)) {
+                e.target.value = '';
+                return;
+            }
+
+            e.target.value = value;
+
+            // Move to next box
+            if (value && index < otpBoxes.length - 1) {
+                otpBoxes[index + 1].focus();
+            }
+        });
+
+        box.addEventListener('keydown', (e) => {
+            // Handle backspace
+            if (e.key === 'Backspace' && !box.value && index > 0) {
+                otpBoxes[index - 1].focus();
+            }
+        });
+
+        box.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const pastedData = e.clipboardData.getData('text').toUpperCase().replace(/[^A-Z0-9]/g, '');
+            
+            for (let i = 0; i < pastedData.length && index + i < otpBoxes.length; i++) {
+                otpBoxes[index + i].value = pastedData[i];
+            }
+            
+            const nextIndex = Math.min(index + pastedData.length, otpBoxes.length - 1);
+            otpBoxes[nextIndex].focus();
+        });
+    });
+}
+
+function startDeleteTimer() {
+    const timerElement = document.getElementById('deleteTimer');
+    const resendButton = document.getElementById('deleteResendBtn');
+
+    if (!timerElement) return;
+    
+    // Clear any existing interval
+    if (deleteTimerInterval) {
+        clearInterval(deleteTimerInterval);
+    }
+
+    deleteTimerInterval = setInterval(() => {
+        const now = Date.now();
+        const remaining = Math.max(0, deleteExpirationTime - now);
+        const minutes = Math.floor(remaining / 60000);
+        const seconds = Math.floor((remaining % 60000) / 1000);
+
+        timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+        if (remaining <= 30000 && remaining > 0) {
+            timerElement.classList.add('warning');
+        }
+
+        if (remaining === 0) {
+            clearInterval(deleteTimerInterval);
+            deleteTimerInterval = null;
+            timerElement.textContent = 'Expired';
+            timerElement.classList.remove('warning');
+            timerElement.classList.add('expired');
+            
+            if (resendButton) {
+                resendButton.disabled = false;
+            }
+
+            // Clear localStorage when expired
+            localStorage.removeItem('deleteAccountEmail');
+            localStorage.removeItem('deleteExpirationTime');
+        }
+    }, 1000);
+}
+
+async function resendDeleteCode() {
+    const resendButton = document.getElementById('deleteResendBtn');
+    if (resendButton) {
+        resendButton.disabled = true;
+    }
+
+    try {
+        const response = await fetch('/send-delete-verification', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email: deleteAccountEmail })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            deleteVerificationCode = data.code;
+            deleteExpirationTime = Date.now() + 3 * 60 * 1000;
+            
+            // Update localStorage with new expiration time
+            localStorage.setItem('deleteExpirationTime', deleteExpirationTime.toString());
+            
+            // Clear OTP inputs
+            document.querySelectorAll('.delete-otp-box').forEach(box => {
+                box.value = '';
+            });
+            
+            // Reset timer
+            const timerElement = document.getElementById('deleteTimer');
+            if (timerElement) {
+                timerElement.classList.remove('warning', 'expired');
+            }
+            
+            if (deleteTimerInterval) {
+                clearInterval(deleteTimerInterval);
+            }
+            startDeleteTimer();
+            
+            alertBox('New verification code sent', 'success');
+            
+            // Focus first input
+            const firstInput = document.querySelector('.delete-otp-box[data-index="0"]');
+            if (firstInput) {
+                firstInput.focus();
+            }
+        } else {
+            alertBox(data.message || 'Failed to resend code', 'error');
+            if (resendButton) {
+                resendButton.disabled = false;
+            }
+        }
+    } catch (error) {
+        console.error('Error resending code:', error);
+        alertBox('An error occurred while resending code', 'error');
+        if (resendButton) {
+            resendButton.disabled = false;
+        }
+    }
+}
+
+async function verifyDeleteAccount() {
+    const otpBoxes = document.querySelectorAll('.delete-otp-box');
+    const enteredCode = Array.from(otpBoxes).map(box => box.value).join('');
+
+    if (enteredCode.length !== 6) {
+        alertBox('Please enter the complete 6-character code', 'error');
+        return;
+    }
+
+    // Check if code expired
+    if (Date.now() > deleteExpirationTime) {
+        alertBox('Verification code has expired', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch('/verify-delete-account', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: deleteAccountEmail,
+                code: enteredCode
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alertBox('Account deleted successfully', 'success');
+            
+            // Clear delete verification data first
+            localStorage.removeItem('deleteAccountEmail');
+            localStorage.removeItem('deleteExpirationTime');
+            
+            // Clear all other data
+            localStorage.clear();
+            
+            // Close modal
+            if (deleteTimerInterval) {
+                clearInterval(deleteTimerInterval);
+                deleteTimerInterval = null;
+            }
+            
+            const modal = document.getElementById('deleteVerifyModal');
+            if (modal) {
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+                setTimeout(() => {
+                    modal.remove();
+                }, 300);
+            }
+            
+            // Redirect to login
+            setTimeout(() => {
+                window.location.href = '/login.html';
+            }, 1500);
+        } else {
+            alertBox(data.message || 'Invalid verification code', 'error');
+        }
+    } catch (error) {
+        console.error('Error verifying delete account:', error);
+        alertBox('An error occurred during verification', 'error');
+    }
 }

@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs'); // Replace bcrypt with bcryptjs
 const JSZip = require('jszip');
 const https = require('https');
 const multer = require('multer');
+const nodemailer = require('nodemailer');
 const upload = multer();
 
 const app = express();
@@ -466,6 +467,381 @@ app.post('/register', async (req, res) => {
   } catch (error) {
     console.error("Error registering user:", error);
     res.status(500).send("Error registering user");
+  }
+});
+
+// Store verification codes temporarily (in production, use Redis or database)
+const verificationCodes = new Map();
+
+// Check if user exists endpoint
+app.post('/check-user-exists', async (req, res) => {
+  const { username, email } = req.body;
+
+  if (!username || !email) {
+    return res.status(400).json({ message: 'Username and email are required' });
+  }
+
+  try {
+    const usersCollection = client.db("Link").collection("User");
+
+    // Check if username or email already exists
+    const existingUser = await usersCollection.findOne({
+      $or: [
+        { username: username },
+        { email: email }
+      ]
+    });
+
+    if (existingUser) {
+      if (existingUser.username === username && existingUser.email === email) {
+        return res.status(400).json({ message: 'Username and email already exist' });
+      } else if (existingUser.username === username) {
+        return res.status(400).json({ message: 'Username already exists. Please choose another username.' });
+      } else if (existingUser.email === email) {
+        return res.status(400).json({ message: 'Email already registered. Please use another email or login.' });
+      }
+    }
+
+    res.status(200).json({ message: 'Username and email are available' });
+  } catch (error) {
+    console.error('Error checking user:', error);
+    res.status(500).json({ message: 'Error checking user data' });
+  }
+});
+
+// Generate random 6-character code (letters and numbers)
+function generateVerificationCode() {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return code;
+}
+
+// Send verification code endpoint
+app.post('/send-verification-code', async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: 'Email is required' });
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: 'Invalid email format' });
+  }
+
+  try {
+    // Check if email configuration is available
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.error('Email configuration missing in environment variables');
+      return res.status(500).json({ message: 'Email service not configured' });
+    }
+
+    // Generate verification code
+    const code = generateVerificationCode();
+    
+    // Store code with expiration (3 minutes)
+    verificationCodes.set(email, {
+      code: code,
+      expiresAt: Date.now() + 3 * 60 * 1000 // 3 minutes
+    });
+
+    console.log(`Generated verification code for ${email}: ${code}`);
+
+    // Configure email transporter
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+
+    // Verify transporter configuration
+    try {
+      await transporter.verify();
+      console.log('Email transporter verified successfully');
+    } catch (verifyError) {
+      console.error('Email transporter verification failed:', verifyError);
+      return res.status(500).json({ message: 'Email service configuration error' });
+    }
+
+    // Send email
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Email Verification Code - Data Links',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+          <div style="background: linear-gradient(135deg, #4285f4, #34a853); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+            <h1 style="color: white; margin: 0;">Data Links</h1>
+          </div>
+          <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px;">
+            <h2 style="color: #333;">Email Verification</h2>
+            <p style="color: #666; font-size: 16px;">Thank you for registering! Please use the verification code below to complete your registration:</p>
+            <div style="background: #f0f0f0; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+              <h1 style="color: #4285f4; font-size: 36px; letter-spacing: 8px; margin: 0;">${code}</h1>
+            </div>
+            <p style="color: #666; font-size: 14px;">This code will expire in 3 minutes.</p>
+            <p style="color: #999; font-size: 12px; margin-top: 30px;">If you didn't request this code, please ignore this email.</p>
+          </div>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`Verification code sent successfully to ${email}`);
+    
+    res.status(200).json({ 
+      message: 'Verification code sent successfully',
+      code: code // For development/testing only - remove in production
+    });
+  } catch (error) {
+    console.error('Error sending verification code:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      command: error.command
+    });
+    res.status(500).json({ 
+      message: 'Failed to send verification code. Please try again.',
+      error: error.message // For debugging - remove in production
+    });
+  }
+});
+
+// Verify code and register endpoint
+app.post('/verify-and-register', upload.single('profileImage'), async (req, res) => {
+  const { username, email, password, verificationCode, profileImageUrl } = req.body;
+  const profileImage = req.file;
+
+  if (!username || !email || !password || !verificationCode) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+
+  try {
+    // Check verification code
+    const storedData = verificationCodes.get(email);
+    
+    if (!storedData) {
+      return res.status(400).json({ message: 'Verification code not found or expired' });
+    }
+
+    if (Date.now() > storedData.expiresAt) {
+      verificationCodes.delete(email);
+      return res.status(400).json({ message: 'Verification code expired' });
+    }
+
+    if (storedData.code !== verificationCode.toUpperCase()) {
+      return res.status(400).json({ message: 'Invalid verification code' });
+    }
+
+    // Verification successful, proceed with registration
+    const usersCollection = client.db("Link").collection("User");
+
+    // Check if username or email already exists
+    const existingUser = await usersCollection.findOne({
+      $or: [
+        { username: username },
+        { email: email }
+      ]
+    });
+
+    if (existingUser) {
+      verificationCodes.delete(email);
+      if (existingUser.username === username) {
+        return res.status(400).json({ message: 'Username already exists' });
+      }
+      if (existingUser.email === email) {
+        return res.status(400).json({ message: 'Email already exists' });
+      }
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Prepare user data
+    const userData = {
+      username,
+      email,
+      password: hashedPassword,
+      emailVerified: true,
+      createdAt: new Date()
+    };
+
+    // Add profile image - priority: uploaded file > URL > default
+    if (profileImage) {
+      // Convert buffer to base64
+      const base64Image = profileImage.buffer.toString('base64');
+      userData.profileImage = `data:${profileImage.mimetype};base64,${base64Image}`;
+    } else if (profileImageUrl) {
+      // Use URL directly
+      userData.profileImage = profileImageUrl;
+    } else {
+      // Use default image
+      userData.profileImage = '/img/b1.jpg';
+    }
+
+    await usersCollection.insertOne(userData);
+
+    // Remove verification code after successful registration
+    verificationCodes.delete(email);
+
+    res.status(201).json({ message: 'User registered successfully' });
+  } catch (error) {
+    console.error("Error during verification and registration:", error);
+    res.status(500).json({ message: 'Error during registration' });
+  }
+});
+
+// Send reset code endpoint
+app.post('/send-reset-code', async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: 'Email is required' });
+  }
+
+  try {
+    // Check if email exists in database
+    const usersCollection = client.db("Link").collection("User");
+    const user = await usersCollection.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'Email not found' });
+    }
+
+    // Generate reset code
+    const code = generateVerificationCode();
+    
+    // Store code with expiration (3 minutes)
+    verificationCodes.set(`reset_${email}`, {
+      code: code,
+      expiresAt: Date.now() + 3 * 60 * 1000 // 3 minutes
+    });
+
+    // Configure email transporter
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+
+    // Send email
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Password Reset Code - Data Links',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+          <div style="background: linear-gradient(135deg, #4285f4, #34a853); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+            <h1 style="color: white; margin: 0;">Data Links</h1>
+          </div>
+          <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px;">
+            <h2 style="color: #333;">Password Reset</h2>
+            <p style="color: #666; font-size: 16px;">You requested to reset your password. Please use the code below:</p>
+            <div style="background: #f0f0f0; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+              <h1 style="color: #4285f4; font-size: 36px; letter-spacing: 8px; margin: 0;">${code}</h1>
+            </div>
+            <p style="color: #666; font-size: 14px;">This code will expire in 3 minutes.</p>
+            <p style="color: #999; font-size: 12px; margin-top: 30px;">If you didn't request this, please ignore this email.</p>
+          </div>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    
+    res.status(200).json({ message: 'Reset code sent successfully' });
+  } catch (error) {
+    console.error('Error sending reset code:', error);
+    res.status(500).json({ message: 'Failed to send reset code' });
+  }
+});
+
+// Verify reset code endpoint
+app.post('/verify-reset-code', async (req, res) => {
+  const { email, code } = req.body;
+
+  if (!email || !code) {
+    return res.status(400).json({ message: 'Email and code are required' });
+  }
+
+  try {
+    // Check verification code
+    const storedData = verificationCodes.get(`reset_${email}`);
+    
+    if (!storedData) {
+      return res.status(400).json({ message: 'Reset code not found or expired' });
+    }
+
+    if (Date.now() > storedData.expiresAt) {
+      verificationCodes.delete(`reset_${email}`);
+      return res.status(400).json({ message: 'Reset code expired' });
+    }
+
+    if (storedData.code !== code.toUpperCase()) {
+      return res.status(400).json({ message: 'Invalid reset code' });
+    }
+
+    // Code is valid, mark it as verified (don't delete yet, need it for password reset)
+    verificationCodes.set(`reset_${email}`, {
+      ...storedData,
+      verified: true
+    });
+
+    res.status(200).json({ message: 'Code verified successfully' });
+  } catch (error) {
+    console.error('Error verifying reset code:', error);
+    res.status(500).json({ message: 'Error verifying code' });
+  }
+});
+
+// Reset password endpoint
+app.post('/reset-password', async (req, res) => {
+  const { email, newPassword } = req.body;
+
+  if (!email || !newPassword) {
+    return res.status(400).json({ message: 'Email and new password are required' });
+  }
+
+  try {
+    // Check if code was verified
+    const storedData = verificationCodes.get(`reset_${email}`);
+    
+    if (!storedData || !storedData.verified) {
+      return res.status(400).json({ message: 'Please verify reset code first' });
+    }
+
+    if (Date.now() > storedData.expiresAt) {
+      verificationCodes.delete(`reset_${email}`);
+      return res.status(400).json({ message: 'Reset session expired' });
+    }
+
+    // Update password
+    const usersCollection = client.db("Link").collection("User");
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    const result = await usersCollection.updateOne(
+      { email: email },
+      { $set: { password: hashedPassword, updatedAt: new Date() } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Remove verification code after successful password reset
+    verificationCodes.delete(`reset_${email}`);
+
+    res.status(200).json({ message: 'Password reset successfully' });
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    res.status(500).json({ message: 'Error resetting password' });
   }
 });
 
@@ -1389,6 +1765,133 @@ async function processUpload(uploadId) {
     activeUploads.delete(uploadId);
   }
 }
+
+// Send delete account verification code endpoint
+app.post('/send-delete-verification', async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: 'Email is required' });
+  }
+
+  try {
+    // Check if email exists in database
+    const usersCollection = client.db("Link").collection("User");
+    const user = await usersCollection.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'Email not found' });
+    }
+
+    // Generate verification code
+    const code = generateVerificationCode();
+    
+    // Store code with expiration (3 minutes)
+    verificationCodes.set(`delete_${email}`, {
+      code: code,
+      expiresAt: Date.now() + 3 * 60 * 1000 // 3 minutes
+    });
+
+    // Configure email transporter
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+
+    // Send email
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Account Deletion Verification - Data Links',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+          <div style="background: linear-gradient(135deg, #d32f2f, #b71c1c); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+            <h1 style="color: white; margin: 0;">Data Links</h1>
+          </div>
+          <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px;">
+            <h2 style="color: #d32f2f;">⚠️ Account Deletion Verification</h2>
+            <p style="color: #666; font-size: 16px;">You have requested to delete your account. This action cannot be undone.</p>
+            <p style="color: #666; font-size: 16px;">Please use the verification code below to confirm account deletion:</p>
+            <div style="background: #f0f0f0; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+              <h1 style="color: #d32f2f; font-size: 36px; letter-spacing: 8px; margin: 0;">${code}</h1>
+            </div>
+            <p style="color: #666; font-size: 14px;">This code will expire in 3 minutes.</p>
+            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
+              <p style="color: #856404; margin: 0; font-size: 14px;"><strong>Warning:</strong> Once deleted, all your data including links and notes will be permanently removed.</p>
+            </div>
+            <p style="color: #999; font-size: 12px; margin-top: 30px;">If you didn't request this, please ignore this email and secure your account.</p>
+          </div>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    
+    res.status(200).json({ message: 'Verification code sent successfully', code: code });
+  } catch (error) {
+    console.error('Error sending delete verification code:', error);
+    res.status(500).json({ message: 'Failed to send verification code' });
+  }
+});
+
+// Verify and delete account endpoint
+app.post('/verify-delete-account', async (req, res) => {
+  const { email, code } = req.body;
+
+  if (!email || !code) {
+    return res.status(400).json({ message: 'Email and code are required' });
+  }
+
+  try {
+    // Check verification code
+    const storedData = verificationCodes.get(`delete_${email}`);
+    
+    if (!storedData) {
+      return res.status(400).json({ message: 'Verification code not found or expired' });
+    }
+
+    if (Date.now() > storedData.expiresAt) {
+      verificationCodes.delete(`delete_${email}`);
+      return res.status(400).json({ message: 'Verification code expired' });
+    }
+
+    if (storedData.code !== code.toUpperCase()) {
+      return res.status(400).json({ message: 'Invalid verification code' });
+    }
+
+    // Verification successful, proceed with account deletion
+    const usersCollection = client.db("Link").collection("User");
+    const linksCollection = client.db("Link").collection("link");
+    const notesCollection = client.db("Link").collection("notes");
+
+    // Find user to get username
+    const user = await usersCollection.findOne({ email });
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Delete user's links
+    await linksCollection.deleteMany({ username: user.username });
+
+    // Delete user's notes
+    await notesCollection.deleteMany({ username: user.username });
+
+    // Delete user account
+    await usersCollection.deleteOne({ email });
+
+    // Remove verification code
+    verificationCodes.delete(`delete_${email}`);
+
+    res.status(200).json({ message: 'Account deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    res.status(500).json({ message: 'Error deleting account' });
+  }
+});
 
 // Route to cancel upload
 app.post('/cancel-upload/:uploadId', (req, res) => {

@@ -80,13 +80,13 @@
                         </div>
 
                         <div class="form-actions">
-                            <a href="#" class="forgot-password" onclick="showForgotPasswordPrompt()">Forgot
+                            <a href="#" class="forgot-password" onclick="event.preventDefault(); showForgotPasswordPrompt();">Forgot
                                 password?</a>
                         </div>
 
                         <button type="submit" class="submit-btn">Login</button>
                         <p class="switch-form">Don't have an account? <a href="#"
-                                onclick="toggleForm('register')">Register here</a></p>
+                                onclick="event.preventDefault(); toggleForm('register');">Register here</a></p>
                     </form>
                 </div>
 
@@ -95,18 +95,42 @@
                         <h2>Register</h2>
                         <p class="form-description">Create your new account</p>
                     </div>
-                    <form id="registerForm" onsubmit="event.preventDefault(); register();">
+                    <form id="registerForm" onsubmit="event.preventDefault(); sendVerificationCode();">
+                        <div class="profile-image-upload">
+                            <div class="image-preview-container">
+                                <img id="profilePreview" src="/img/b1.jpg" alt="Profile Preview" class="profile-preview">
+                                <label for="profileImage" class="upload-overlay">
+                                    <i class="fas fa-camera"></i>
+                                    <span>Change Photo</span>
+                                </label>
+                            </div>
+                            <input type="file" id="profileImage" accept="image/*" style="display: none;" onchange="previewProfileImage(event)">
+                            <div class="image-option-toggle">
+                                <button type="button" class="option-btn active" onclick="toggleImageOption('upload')">
+                                    <i class="fas fa-upload"></i> Upload
+                                </button>
+                                <button type="button" class="option-btn" onclick="toggleImageOption('url')">
+                                    <i class="fas fa-link"></i> URL
+                                </button>
+                            </div>
+                        </div>
+                        <div class="image-url-input" id="imageUrlInput" style="display: none;">
+                            <input type="url" id="profileImageUrl" class="input-field" placeholder="Enter image URL (e.g., https://example.com/image.jpg)">
+                            <button type="button" class="preview-url-btn" onclick="previewImageUrl()">
+                                <i class="fas fa-eye"></i> Preview
+                            </button>
+                        </div>
                         <div class="input-group">
                             <div class="input-wrapper">
                                 <i class="fas fa-user"></i>
                                 <label for="registerUsername" class="visually-hidden">Username</label>
-                                <input type="text" id="registerUsername" class="input-field" placeholder="Username"
-                                    required aria-label="Username">
+                                <input type="text" id="registerUsername" class="input-field" placeholder="Username (6-50 characters)"
+                                    required aria-label="Username" minlength="6" maxlength="50">
                             </div>
                             <div class="input-wrapper">
                                 <i class="fas fa-envelope"></i>
-                                <label for="registerEmail" class="visually-hidden">Email</label>
-                                <input type="email" id="registerEmail" class="input-field" placeholder="Email" required aria-label="Email">
+                                <label for="registerEmail" class="visually-hidden">Gmail Address</label>
+                                <input type="email" id="registerEmail" class="input-field" placeholder="Gmail Address (example@gmail.com)" required aria-label="Gmail Address">
                             </div>
                             <div class="input-wrapper">
                                 <i class="fas fa-lock"></i>
@@ -125,38 +149,111 @@
                         </div>
                         <div class="terms">
                             <input type="checkbox" id="terms" required>
-                            <label for="terms">I agree to the <a href="#">Terms and Conditions</a></label>
+                            <label for="terms">I agree to the <a href="#" onclick="event.preventDefault(); showTermsModal();">Terms and Conditions</a></label>
                         </div>
-                        <button type="submit" class="submit-btn">Register</button>
-                        <p class="switch-form">Already have an account? <a href="#" onclick="toggleForm('login')">Login
+                        <button type="submit" class="submit-btn">Send Verification Code</button>
+                        <p class="switch-form">Already have an account? <a href="#" onclick="event.preventDefault(); toggleForm('login');">Login
                                 here</a></p>
                     </form>
                 </div>
 
-                <!-- Add Forgot Password Container -->
-                <div class="form-container" id="forgotPasswordContainer" style="display: none;">
+                <!-- Verification Code Container -->
+                <div class="form-container" id="verificationContainer">
+                    <div class="form-header">
+                        <h2>Verify Your Email</h2>
+                        <p class="form-description">Enter the 6-digit code sent to your Gmail</p>
+                    </div>
+                    <div class="verification-info">
+                        <i class="fas fa-envelope-open-text"></i>
+                        <p>We've sent a verification code to:</p>
+                        <strong id="verificationEmail"></strong>
+                        <div class="countdown-timer">
+                            <i class="fas fa-clock"></i>
+                            <span id="countdownTimer">3:00</span>
+                        </div>
+                    </div>
+                    <form id="verificationForm" onsubmit="event.preventDefault(); verifyAndRegister();">
+                        <div class="code-input-container">
+                            <input type="text" class="code-input" maxlength="1" pattern="[A-Za-z0-9]" data-index="0" aria-label="Code digit 1">
+                            <input type="text" class="code-input" maxlength="1" pattern="[A-Za-z0-9]" data-index="1" aria-label="Code digit 2">
+                            <input type="text" class="code-input" maxlength="1" pattern="[A-Za-z0-9]" data-index="2" aria-label="Code digit 3">
+                            <input type="text" class="code-input" maxlength="1" pattern="[A-Za-z0-9]" data-index="3" aria-label="Code digit 4">
+                            <input type="text" class="code-input" maxlength="1" pattern="[A-Za-z0-9]" data-index="4" aria-label="Code digit 5">
+                            <input type="text" class="code-input" maxlength="1" pattern="[A-Za-z0-9]" data-index="5" aria-label="Code digit 6">
+                        </div>
+                        <button type="submit" class="submit-btn" id="verifyBtn">Verify & Register</button>
+                        <button type="button" class="submit-btn" id="resendBtn" onclick="resendVerificationCode()" style="background: var(--secondary-color); margin-top: 10px;">
+                            <i class="fas fa-redo"></i> Resend Code
+                        </button>
+                        <p class="switch-form">
+                            <a href="#" onclick="event.preventDefault(); toggleForm('register');">Back to Registration</a>
+                        </p>
+                    </form>
+                </div>
+
+                <!-- Forgot Password Container -->
+                <div class="form-container" id="forgotPasswordContainer">
                     <div class="form-header">
                         <h2>Reset Password</h2>
-                        <p class="form-description">Enter your account details</p>
+                        <p class="form-description">Enter your Gmail address</p>
                     </div>
-                    <div id="credentialsForm">
+                    <form id="forgotPasswordForm" onsubmit="event.preventDefault(); sendResetCode();">
                         <div class="input-group">
                             <div class="input-wrapper">
-                                <i class="fas fa-user"></i>
-                                <label for="resetUsername" class="visually-hidden">Username</label>
-                                <input type="text" id="resetUsername" class="input-field" placeholder="Username"
-                                    required aria-label="Username">
-                            </div>
-                            <div class="input-wrapper">
                                 <i class="fas fa-envelope"></i>
-                                <label for="resetEmail" class="visually-hidden">Email</label>
-                                <input type="email" id="resetEmail" class="input-field" placeholder="Email" required aria-label="Email">
+                                <label for="resetEmail" class="visually-hidden">Gmail Address</label>
+                                <input type="email" id="resetEmail" class="input-field" placeholder="Gmail Address"
+                                    required aria-label="Gmail Address">
                             </div>
                         </div>
-                        <button type="button" class="submit-btn" onclick="checkResetCredentials()">Continue</button>
-                    </div>
+                        <button type="submit" class="submit-btn">Send Reset Code</button>
+                        <p class="switch-form">
+                            <a href="#" onclick="event.preventDefault(); toggleForm('login');">Back to Login</a>
+                        </p>
+                    </form>
+                </div>
 
-                    <div id="resetForm" style="display: none;">
+                <!-- Reset Code Verification Container -->
+                <div class="form-container" id="resetCodeContainer">
+                    <div class="form-header">
+                        <h2>Verify Reset Code</h2>
+                        <p class="form-description">Enter the 6-digit code sent to your Gmail</p>
+                    </div>
+                    <div class="verification-info">
+                        <i class="fas fa-envelope-open-text"></i>
+                        <p>We've sent a reset code to:</p>
+                        <strong id="resetEmailDisplay"></strong>
+                        <div class="countdown-timer">
+                            <i class="fas fa-clock"></i>
+                            <span id="resetCountdownTimer">3:00</span>
+                        </div>
+                    </div>
+                    <form id="resetCodeForm" onsubmit="event.preventDefault(); verifyResetCode();">
+                        <div class="code-input-container">
+                            <input type="text" class="code-input reset-code-input" maxlength="1" pattern="[A-Za-z0-9]" data-index="0" aria-label="Reset code digit 1">
+                            <input type="text" class="code-input reset-code-input" maxlength="1" pattern="[A-Za-z0-9]" data-index="1" aria-label="Reset code digit 2">
+                            <input type="text" class="code-input reset-code-input" maxlength="1" pattern="[A-Za-z0-9]" data-index="2" aria-label="Reset code digit 3">
+                            <input type="text" class="code-input reset-code-input" maxlength="1" pattern="[A-Za-z0-9]" data-index="3" aria-label="Reset code digit 4">
+                            <input type="text" class="code-input reset-code-input" maxlength="1" pattern="[A-Za-z0-9]" data-index="4" aria-label="Reset code digit 5">
+                            <input type="text" class="code-input reset-code-input" maxlength="1" pattern="[A-Za-z0-9]" data-index="5" aria-label="Reset code digit 6">
+                        </div>
+                        <button type="submit" class="submit-btn" id="verifyResetBtn">Verify Code</button>
+                        <button type="button" class="submit-btn" id="resendResetBtn" onclick="resendResetCode()" style="background: var(--secondary-color); margin-top: 10px;">
+                            <i class="fas fa-redo"></i> Resend Code
+                        </button>
+                        <p class="switch-form">
+                            <a href="#" onclick="event.preventDefault(); toggleForm('forgot');">Back</a>
+                        </p>
+                    </form>
+                </div>
+
+                <!-- New Password Container -->
+                <div class="form-container" id="newPasswordContainer">
+                    <div class="form-header">
+                        <h2>Create New Password</h2>
+                        <p class="form-description">Enter your new password</p>
+                    </div>
+                    <form id="newPasswordForm" onsubmit="event.preventDefault(); resetPassword();">
                         <div class="input-group">
                             <div class="input-wrapper">
                                 <i class="fas fa-lock"></i>
@@ -171,17 +268,104 @@
                                     placeholder="Confirm New Password" required aria-label="Confirm New Password">
                             </div>
                         </div>
-                        <button type="button" class="submit-btn" onclick="resetPassword()">Reset Password</button>
-                    </div>
-
-                    <p class="switch-form">
-                        <a href="#" onclick="toggleForm('login')">Back to Login</a>
-                    </p>
+                        <button type="submit" class="submit-btn">Reset Password</button>
+                        <p class="switch-form">
+                            <a href="#" onclick="event.preventDefault(); toggleForm('login');">Back to Login</a>
+                        </p>
+                    </form>
                 </div>
             </div>
         </div>
 
         <div id="alertBox" class="alert-box"></div>
+        
+        <!-- Terms and Conditions Modal -->
+        <div id="termsModal" class="terms-modal">
+            <div class="terms-modal-content">
+                <div class="terms-modal-header">
+                    <h2>Terms and Conditions</h2>
+                    <button class="terms-close-btn" onclick="closeTermsModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="terms-modal-body">
+                    <h3>1. Acceptance of Terms</h3>
+                    <p>By accessing and using Data Links, you accept and agree to be bound by the terms and provision of this agreement.</p>
+                    
+                    <h3>2. Use License</h3>
+                    <p>Permission is granted to temporarily use Data Links for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title, and under this license you may not:</p>
+                    <ul>
+                        <li>Modify or copy the materials</li>
+                        <li>Use the materials for any commercial purpose or for any public display</li>
+                        <li>Attempt to reverse engineer any software contained on Data Links</li>
+                        <li>Remove any copyright or other proprietary notations from the materials</li>
+                        <li>Transfer the materials to another person or "mirror" the materials on any other server</li>
+                    </ul>
+                    
+                    <h3>3. User Account</h3>
+                    <p>When you create an account with us, you must provide accurate, complete, and current information. Failure to do so constitutes a breach of the Terms, which may result in immediate termination of your account.</p>
+                    <p>You are responsible for safeguarding the password that you use to access the service and for any activities or actions under your password.</p>
+                    
+                    <h3>4. Privacy Policy</h3>
+                    <p>Your use of Data Links is also governed by our Privacy Policy. We collect and use your personal information including:</p>
+                    <ul>
+                        <li>Email address for account verification and communication</li>
+                        <li>Username for identification</li>
+                        <li>Profile image (optional)</li>
+                        <li>Files and data you upload to the service</li>
+                    </ul>
+                    
+                    <h3>5. Content</h3>
+                    <p>You retain all rights to the content you upload to Data Links. However, by uploading content, you grant us a license to store, display, and share your content as necessary to provide the service.</p>
+                    <p>You are solely responsible for the content you upload and must ensure you have the right to upload such content.</p>
+                    
+                    <h3>6. Prohibited Uses</h3>
+                    <p>You may not use Data Links:</p>
+                    <ul>
+                        <li>For any unlawful purpose or to solicit others to perform unlawful acts</li>
+                        <li>To violate any international, federal, provincial or state regulations, rules, laws, or local ordinances</li>
+                        <li>To infringe upon or violate our intellectual property rights or the intellectual property rights of others</li>
+                        <li>To harass, abuse, insult, harm, defame, slander, disparage, intimidate, or discriminate</li>
+                        <li>To upload or transmit viruses or any other type of malicious code</li>
+                        <li>To spam, phish, pharm, pretext, spider, crawl, or scrape</li>
+                    </ul>
+                    
+                    <h3>7. Disclaimer</h3>
+                    <p>The materials on Data Links are provided on an 'as is' basis. Data Links makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.</p>
+                    
+                    <h3>8. Limitations</h3>
+                    <p>In no event shall Data Links or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use Data Links.</p>
+                    
+                    <h3>9. Service Modifications</h3>
+                    <p>We reserve the right to modify or discontinue, temporarily or permanently, the service (or any part thereof) with or without notice at any time.</p>
+                    
+                    <h3>10. Termination</h3>
+                    <p>We may terminate or suspend your account immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.</p>
+                    
+                    <h3>11. Governing Law</h3>
+                    <p>These Terms shall be governed and construed in accordance with the laws of the jurisdiction in which Data Links operates, without regard to its conflict of law provisions.</p>
+                    
+                    <h3>12. Changes to Terms</h3>
+                    <p>We reserve the right, at our sole discretion, to modify or replace these Terms at any time. We will provide notice of any significant changes by posting the new Terms on this page.</p>
+                    
+                    <h3>13. Contact Us</h3>
+                    <p>If you have any questions about these Terms, please contact us through the Support page.</p>
+                    
+                    <div class="terms-acceptance">
+                        <p><strong>Last Updated:</strong> February 2, 2026</p>
+                        <p>By clicking "I agree to the Terms and Conditions" during registration, you acknowledge that you have read, understood, and agree to be bound by these Terms.</p>
+                    </div>
+                </div>
+                <div class="terms-modal-footer">
+                    <button class="submit-btn" onclick="acceptTerms()">
+                        <i class="fas fa-check"></i> I Accept
+                    </button>
+                    <button class="submit-btn" onclick="closeTermsModal()" style="background: var(--secondary-color);">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 

@@ -123,10 +123,12 @@ body {
     display: flex;
     gap: var(--spacing-md);
     flex-wrap: wrap;
+    justify-content: center;
 }
 
 .edit-btn,
-.logout-btn {
+.logout-btn,
+.delete-account-btn {
     flex: 1;
     min-width: 200px;
     padding: var(--spacing-md) var(--spacing-xl);
@@ -145,6 +147,19 @@ body {
 .edit-btn {
     background: var(--primary-color);
     color: white;
+    order: 1;
+}
+
+.delete-account-btn {
+    background: #d32f2f;
+    color: white;
+    order: 2;
+}
+
+.logout-btn {
+    background: var(--error-color);
+    color: white;
+    order: 3;
 }
 
 .edit-btn:hover {
@@ -153,19 +168,21 @@ body {
     box-shadow: var(--shadow-md);
 }
 
-.logout-btn {
-    background: var(--error-color);
-    color: white;
-}
-
 .logout-btn:hover {
     background: #c62828;
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
 }
 
+.delete-account-btn:hover {
+    background: #b71c1c;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
 .edit-btn:active,
-.logout-btn:active {
+.logout-btn:active,
+.delete-account-btn:active {
     transform: translateY(0);
 }
 
@@ -210,12 +227,20 @@ body {
         transform: translateY(-5px);
     }
     
+    .profile-name,
+    .profile-email {
+        word-break: break-all;
+        overflow-wrap: break-word;
+        max-width: 100%;
+    }
+    
     .button-container {
         flex-direction: column;
     }
     
     .edit-btn,
-    .logout-btn {
+    .logout-btn,
+    .delete-account-btn {
         width: 100%;
         min-width: auto;
     }
@@ -231,7 +256,7 @@ body {
     }
     
     .profile-card {
-        padding: var(--spacing-lg);
+        padding: var(--spacing-md);
     }
     
     .profile-img {
@@ -239,13 +264,59 @@ body {
         height: 100px;
     }
     
-    .info-label {
-        font-size: 1rem;
+    .info-row {
+        padding: var(--spacing-sm) var(--spacing-md);
+        margin-bottom: var(--spacing-sm);
+        gap: var(--spacing-xs);
     }
     
-    .profile-name,
+    .info-label {
+        font-size: 0.75rem;
+        margin-bottom: 0;
+    }
+    
+    .info-label i {
+        font-size: 0.85rem;
+    }
+    
+    .profile-name {
+        font-size: 0.95rem;
+        word-break: break-all;
+        overflow-wrap: break-word;
+        line-height: 1.4;
+    }
+    
     .profile-email {
-        font-size: 1rem;
+        font-size: 0.8rem;
+        word-break: break-all;
+        overflow-wrap: break-word;
+        line-height: 1.5;
+    }
+    
+    /* Visitor info (number of links) */
+    .visitor-info .info-row {
+        padding: var(--spacing-sm) var(--spacing-md);
+        flex-direction: row;
+        justify-content: center;
+    }
+    
+    .visitor-info .info-label {
+        font-size: 0.75rem;
+    }
+    
+    .visitor-info .info-label i {
+        font-size: 0.85rem;
+    }
+    
+    .visitor-info h2#number_of_links {
+        font-size: 0.95rem;
+    }
+    
+    .edit-btn,
+    .logout-btn,
+    .delete-account-btn {
+        font-size: 0.95rem;
+        padding: var(--spacing-sm) var(--spacing-md);
     }
 }
 
@@ -487,6 +558,11 @@ body {
     color: white;
 }
 
+.alert-message.warning {
+    background: var(--error-color);
+    color: white;
+}
+
 .alert-message.info {
     background: var(--primary-color);
     color: white;
@@ -549,4 +625,336 @@ body {
 
 .alert-btn.confirm-btn:hover {
     background: var(--primary-hover);
+}
+
+/* Alert Message Responsive */
+@media (max-width: 768px) {
+    .alert-message {
+        top: auto;
+        bottom: var(--spacing-lg);
+        right: var(--spacing-md);
+        left: auto;
+        max-width: 280px;
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .alert-message {
+        top: auto;
+        bottom: var(--spacing-md);
+        right: var(--spacing-sm);
+        left: auto;
+        max-width: 250px;
+        padding: var(--spacing-xs) var(--spacing-sm);
+        font-size: 0.8rem;
+    }
+}
+
+/* Delete Account Modal */
+.delete-account-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.delete-account-modal.active {
+    display: flex;
+}
+
+.delete-modal-content {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-2xl);
+    max-width: 450px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: fadeIn var(--transition-normal);
+}
+
+.delete-modal-header {
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.delete-modal-header h2 {
+    font-size: 1.5rem;
+    color: var(--error-color);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.delete-form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.delete-form-group label {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.delete-form-group input {
+    width: 100%;
+    padding: var(--spacing-md);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    transition: all var(--transition-fast);
+}
+
+.delete-form-group input:focus {
+    outline: none;
+    border-color: var(--error-color);
+    box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
+}
+
+.delete-warning {
+    background: rgba(211, 47, 47, 0.1);
+    border-left: 4px solid var(--error-color);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    border-radius: var(--radius-md);
+}
+
+.delete-warning p {
+    color: var(--error-color);
+    font-weight: 600;
+    margin: 0;
+}
+
+.delete-modal-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: flex-end;
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+}
+
+.delete-modal-actions button {
+    padding: var(--spacing-md) var(--spacing-xl);
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.delete-modal-actions button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.delete-cancel-btn {
+    background: var(--text-tertiary);
+    color: white;
+}
+
+.delete-cancel-btn:hover {
+    background: var(--text-secondary);
+}
+
+.delete-send-btn {
+    background: var(--error-color);
+    color: white;
+}
+
+.delete-send-btn:hover {
+    background: #c62828;
+}
+
+/* Delete Verification Modal (OTP) */
+.delete-verify-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 1001;
+    align-items: center;
+    justify-content: center;
+}
+
+.delete-verify-modal.active {
+    display: flex;
+}
+
+.delete-verify-content {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-2xl);
+    max-width: 450px;
+    width: 90%;
+    animation: fadeIn var(--transition-normal);
+    text-align: center;
+}
+
+.delete-verify-content h2 {
+    font-size: 1.5rem;
+    color: var(--error-color);
+    margin-bottom: var(--spacing-md);
+}
+
+.delete-verify-content p {
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.delete-verify-email {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-bottom: var(--spacing-lg);
+}
+
+.delete-otp-container {
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: center;
+    margin: var(--spacing-xl) 0;
+}
+
+.delete-otp-box {
+    width: 50px;
+    height: 60px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 1.5rem;
+    text-align: center;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    transition: all var(--transition-fast);
+    text-transform: uppercase;
+}
+
+.delete-otp-box:focus {
+    outline: none;
+    border-color: var(--error-color);
+    box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
+}
+
+.delete-timer {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    margin: var(--spacing-lg) 0;
+    font-weight: 600;
+}
+
+.delete-timer.warning {
+    color: var(--error-color);
+}
+
+.delete-timer.expired {
+    color: var(--error-color);
+}
+
+.delete-resend-btn {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    font-size: 0.95rem;
+    cursor: pointer;
+    text-decoration: underline;
+    margin-top: var(--spacing-md);
+}
+
+.delete-resend-btn:hover {
+    color: var(--primary-hover);
+}
+
+.delete-resend-btn:disabled {
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+    text-decoration: none;
+}
+
+.delete-verify-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+    margin-top: var(--spacing-xl);
+}
+
+.delete-verify-actions button {
+    padding: var(--spacing-md) var(--spacing-xl);
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.delete-verify-cancel-btn {
+    background: var(--text-tertiary);
+    color: white;
+}
+
+.delete-verify-cancel-btn:hover {
+    background: var(--text-secondary);
+}
+
+.delete-verify-btn {
+    background: var(--error-color);
+    color: white;
+}
+
+.delete-verify-btn:hover {
+    background: #c62828;
+}
+
+@media (max-width: 480px) {
+    .delete-modal-content,
+    .delete-verify-content {
+        padding: var(--spacing-lg);
+    }
+    
+    .delete-modal-header h2 {
+        font-size: 1.2rem;
+    }
+    
+    .delete-verify-content h2 {
+        font-size: 1.2rem;
+    }
+    
+    .delete-modal-actions button,
+    .delete-verify-actions button {
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: 0.85rem;
+    }
+    
+    .delete-otp-container {
+        gap: var(--spacing-xs);
+    }
+    
+    .delete-otp-box {
+        width: 40px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+    
+    .delete-timer {
+        font-size: 1rem;
+    }
+    
+    .delete-resend-btn {
+        font-size: 0.85rem;
+    }
 }
