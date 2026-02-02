@@ -993,11 +993,25 @@ function setupDeleteOTPInputs() {
     const otpBoxes = document.querySelectorAll('.delete-otp-box');
 
     otpBoxes.forEach((box, index) => {
+        // Handle input
         box.addEventListener('input', (e) => {
-            const value = e.target.value.toUpperCase();
+            let value = e.target.value.toUpperCase();
+            
+            // Handle multiple characters (from paste or autocomplete)
+            if (value.length > 1) {
+                // If pasted multiple characters, distribute them
+                const cleanValue = value.replace(/[^A-Z0-9]/g, '');
+                for (let i = 0; i < cleanValue.length && index + i < otpBoxes.length; i++) {
+                    otpBoxes[index + i].value = cleanValue[i];
+                }
+                // Focus next empty or last box
+                const nextIndex = Math.min(index + cleanValue.length, otpBoxes.length - 1);
+                otpBoxes[nextIndex].focus();
+                return;
+            }
             
             // Only allow A-Z and 0-9
-            if (!/^[A-Z0-9]$/.test(value)) {
+            if (value && !/^[A-Z0-9]$/.test(value)) {
                 e.target.value = '';
                 return;
             }
@@ -1010,23 +1024,58 @@ function setupDeleteOTPInputs() {
             }
         });
 
+        // Handle keydown for backspace
         box.addEventListener('keydown', (e) => {
             // Handle backspace
-            if (e.key === 'Backspace' && !box.value && index > 0) {
+            if (e.key === 'Backspace') {
+                if (!box.value && index > 0) {
+                    e.preventDefault();
+                    otpBoxes[index - 1].focus();
+                    otpBoxes[index - 1].select();
+                }
+            }
+            
+            // Left arrow: move to previous input
+            if (e.key === 'ArrowLeft' && index > 0) {
+                e.preventDefault();
                 otpBoxes[index - 1].focus();
+                otpBoxes[index - 1].select();
+            }
+            
+            // Right arrow: move to next input
+            if (e.key === 'ArrowRight' && index < otpBoxes.length - 1) {
+                e.preventDefault();
+                otpBoxes[index + 1].focus();
+                otpBoxes[index + 1].select();
             }
         });
 
+        // Handle paste
         box.addEventListener('paste', (e) => {
             e.preventDefault();
             const pastedData = e.clipboardData.getData('text').toUpperCase().replace(/[^A-Z0-9]/g, '');
             
+            // Fill all boxes starting from current position
             for (let i = 0; i < pastedData.length && index + i < otpBoxes.length; i++) {
                 otpBoxes[index + i].value = pastedData[i];
             }
             
+            // Focus next empty input or last input
             const nextIndex = Math.min(index + pastedData.length, otpBoxes.length - 1);
             otpBoxes[nextIndex].focus();
+        });
+        
+        // Select all on focus (helpful for mobile)
+        box.addEventListener('focus', (e) => {
+            setTimeout(() => e.target.select(), 0);
+        });
+        
+        // Prevent non-alphanumeric on keypress
+        box.addEventListener('keypress', (e) => {
+            const char = String.fromCharCode(e.which || e.keyCode);
+            if (!/^[A-Za-z0-9]$/.test(char)) {
+                e.preventDefault();
+            }
         });
     });
 }
