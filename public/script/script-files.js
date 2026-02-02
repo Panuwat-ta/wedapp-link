@@ -298,12 +298,17 @@ function displayListView(files) {
         const downloadBtn = createDownloadButton(file);
         fileDownload.appendChild(downloadBtn);
 
+        // Create button container for mobile
+        const buttonContainer = document.createElement('div');
+        buttonContainer.className = 'file-item-buttons';
+        buttonContainer.appendChild(fileView);
+        buttonContainer.appendChild(fileDownload);
+
         fileItem.appendChild(fileName);
         fileItem.appendChild(fileOrigin);
         fileItem.appendChild(fileDate);
         fileItem.appendChild(fileSize);
-        fileItem.appendChild(fileView);
-        fileItem.appendChild(fileDownload);
+        fileItem.appendChild(buttonContainer);
 
         fileList.appendChild(fileItem);
     });

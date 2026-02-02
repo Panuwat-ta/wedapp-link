@@ -247,6 +247,11 @@ body {
     gap: var(--spacing-xs);
 }
 
+/* Hide button container on desktop */
+.file-item-buttons {
+    display: none;
+}
+
 /* Grid View */
 .grid-view {
     display: none;
@@ -450,8 +455,14 @@ body {
         font-size: 1rem;
     }
     
+    .container {
+        padding: 0;
+    }
+    
     .file-list {
-        padding: var(--spacing-xl);
+        padding: var(--spacing-lg);
+        border-radius: 0;
+        width: 100%;
     }
     
     .file-list-header {
@@ -483,10 +494,15 @@ body {
         flex-direction: column;
         align-items: stretch;
         gap: var(--spacing-sm);
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-md);
+        grid-template-columns: none;
     }
     
     .file-item:hover {
         transform: translateY(-5px);
+        border-color: var(--primary-color);
     }
     
     .file-name,
@@ -497,21 +513,45 @@ body {
         justify-content: space-between;
     }
     
-    .file-name:before,
-    .file-origin:before,
-    .file-date:before,
-    .file-size:before {
-        content: attr(data-label);
+    .file-name:before {
+        content: 'File: ';
         font-weight: 600;
         color: var(--primary-color);
     }
     
-    .file-view,
-    .file-download-table {
-        justify-content: stretch;
+    .file-origin:before {
+        content: 'Folder: ';
+        font-weight: 600;
+        color: var(--primary-color);
     }
     
-    .file-btn {
+    .file-date:before {
+        content: 'Date: ';
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+    
+    .file-size:before {
+        content: 'Size: ';
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+    
+    /* Button container for mobile - horizontal layout */
+    .file-item-buttons {
+        display: flex;
+        gap: var(--spacing-sm);
+        width: 100%;
+    }
+    
+    .file-view,
+    .file-download-table {
+        flex: 1;
+        display: flex;
+    }
+    
+    .file-link,
+    .file-download {
         width: 100%;
         justify-content: center;
     }
