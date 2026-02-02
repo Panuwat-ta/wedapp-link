@@ -2,7 +2,7 @@
 
 A modern, secure web application for organizing your digital resources with dark/light theme support, mobile-friendly design, and powerful management features.
 
-![Version](https://img.shields.io/badge/version-6.01-blue)
+![Version](https://img.shields.io/badge/version-6.1.1-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Node](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen)
 
@@ -243,7 +243,7 @@ This project is licensed under the MIT License.
 - Express.js community
 
 
-**Version**: 4.0  
+**Version**: 6.1.1  
 **Last Updated**: February 2026  
 **Status**: Active Development
 
