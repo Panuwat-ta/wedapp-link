@@ -5,6 +5,7 @@ nav {
     position: sticky;
     top: 0;
     z-index: 100;
+    border-bottom: none;
 }
 
 .nav-container {
@@ -65,6 +66,13 @@ nav {
     padding: var(--spacing-sm) var(--spacing-md);
     border-radius: var(--radius-full);
     transition: all var(--transition-fast);
+    border: none;
+    outline: none;
+}
+
+.user-profile:focus {
+    outline: none;
+    box-shadow: none;
 }
 
 .user-profile:hover {
@@ -119,6 +127,14 @@ nav a i {
     font-size: 1.5rem;
     cursor: pointer;
     padding: var(--spacing-md);
+    outline: none;
+}
+
+.menu-toggle:focus,
+.menu-toggle:active {
+    outline: none;
+    border: none;
+    box-shadow: none;
 }
 
 .theme-toggle-nav {
@@ -134,6 +150,12 @@ nav a i {
     align-items: center;
     justify-content: center;
     transition: all var(--transition-fast);
+    outline: none;
+}
+
+.theme-toggle-nav:focus {
+    outline: none;
+    box-shadow: none;
 }
 
 .theme-toggle-nav:hover {
@@ -188,6 +210,12 @@ nav a i {
         flex-direction: row;
         gap: var(--spacing-sm);
         z-index: 101;
+        border: none;
+    }
+    
+    .nav-user * {
+        border-left: none !important;
+        border-right: none !important;
     }
     
     .nav-container {
@@ -207,6 +235,7 @@ nav a i {
     .user-avatar-nav {
         width: 28px;
         height: 28px;
+        border-width: 1px;
     }
     
     .user-name {
@@ -217,6 +246,15 @@ nav a i {
         width: 36px;
         height: 36px;
         font-size: 1rem;
+        outline: none;
+        border: none;
+    }
+    
+    .theme-toggle-nav:focus,
+    .theme-toggle-nav:active {
+        outline: none;
+        border: none;
+        box-shadow: none;
     }
 }
 

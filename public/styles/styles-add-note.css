@@ -218,14 +218,14 @@ body {
     padding: 6px 10px;
     border: none;
     border-radius: var(--radius-sm);
-    font-size: 1rem;
+    font-size: 1.2rem;
     cursor: pointer;
     transition: all var(--transition-fast);
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
 }
 
 .view-btn {
@@ -285,32 +285,53 @@ body {
     border-radius: var(--radius-xl);
     max-width: 1400px;
     width: 95%;
-    height: 95vh;
-    max-height: 95vh;
+    height: 85vh;
+    max-height: 85vh;
     overflow: hidden;
     animation: fadeIn var(--transition-normal);
     box-shadow: var(--shadow-lg);
 }
 
-.modal-content h2 {
-    font-size: 1.8rem;
+/* Delete Confirmation Modal - Compact size */
+#deleteConfirmModal .modal-content {
+    max-width: 420px;
+    width: 85%;
+    height: auto;
+    max-height: none;
+    padding: var(--spacing-xl) var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+#deleteConfirmModal .modal-content h2 {
+    font-size: 1.6rem;
+    text-align: center;
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
     color: var(--text-primary);
-    margin-bottom: var(--spacing-lg);
-    padding-bottom: var(--spacing-md);
+}
+
+.modal-content h2 {
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
     border-bottom: 2px solid var(--border-color);
     font-weight: 700;
 }
 
 .note-modal-container {
     display: grid;
-    grid-template-columns: 260px 1fr;
+    grid-template-columns: 220px 1fr;
     height: 100%;
     overflow: hidden;
 }
 
 .note-history {
     background: var(--bg-tertiary);
-    padding: var(--spacing-lg);
+    padding: var(--spacing-md);
     border-right: 2px solid var(--border-color);
     overflow-y: auto;
     height: 100%;
@@ -346,36 +367,52 @@ body {
 }
 
 .note-history h3 {
-    font-size: 1rem;
+    font-size: 0.95rem;
     color: var(--text-primary);
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
     font-weight: 600;
-    padding-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
     border-bottom: 2px solid var(--border-color);
 }
 
 #editHistoryList {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
 }
 
 .history-item {
     background: var(--bg-secondary);
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm);
     border-radius: var(--radius-md);
     border: 2px solid var(--border-color);
     cursor: pointer;
     transition: all var(--transition-fast);
+    font-size: 0.85rem;
 }
 
 .history-item:hover {
     border-color: var(--primary-color);
-    transform: translateX(5px);
+    transform: translateX(3px);
+}
+
+.history-item.active {
+    background: var(--bg-tertiary);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 1px var(--primary-color);
+}
+
+.history-item p {
+    margin: 2px 0;
+    line-height: 1.4;
+}
+
+.history-item strong {
+    color: var(--text-primary);
 }
 
 .note-main {
-    padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-md) var(--spacing-xl);
+    padding: var(--spacing-md) var(--spacing-md) var(--spacing-sm) var(--spacing-md);
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -402,9 +439,9 @@ body {
 }
 
 #editNoteName {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: 600;
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
     flex-shrink: 0;
 }
 
@@ -412,9 +449,10 @@ body {
     flex: 1;
     font-family: inherit;
     resize: none;
-    line-height: 1.8;
+    line-height: 1.6;
     overflow-y: auto;
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    font-size: 0.95rem;
 }
 
 /* Custom scrollbar for textarea */
@@ -468,8 +506,10 @@ body {
     transition: all var(--transition-fast);
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: var(--spacing-sm);
     white-space: nowrap;
+    min-height: 40px;
 }
 
 /* Note info footer styles */
@@ -477,10 +517,10 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--spacing-sm) 0;
+    padding: var(--spacing-xs) 0;
     border-top: 2px solid var(--border-color);
     flex-shrink: 0;
-    min-height: 50px;
+    min-height: 40px;
 }
 
 .note-info-left {
@@ -492,7 +532,7 @@ body {
 
 .note-info small {
     color: var(--text-tertiary);
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     white-space: nowrap;
     display: inline-block;
 }
@@ -599,7 +639,7 @@ body {
 }
 
 .form-group {
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: 0;
 }
 
 .form-group label {
@@ -607,23 +647,51 @@ body {
     margin-bottom: var(--spacing-sm);
     color: var(--text-primary);
     font-weight: 600;
+    font-size: 1rem;
+    text-align: center;
 }
 
 .form-control {
     width: 100%;
     padding: var(--spacing-md);
-    border: 2px solid var(--border-color);
+    border: 2px solid var(--primary-color);
     border-radius: var(--radius-md);
     font-size: 1rem;
     background: var(--bg-tertiary);
     color: var(--text-primary);
     transition: all var(--transition-fast);
+    text-align: center;
 }
 
 .form-control:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+    box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.2);
+}
+
+#deleteConfirmModal .modal-buttons {
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: center;
+    margin-top: var(--spacing-sm);
+}
+
+#deleteConfirmModal .modal-buttons button {
+    padding: var(--spacing-md) var(--spacing-xl);
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    min-width: 130px;
+    min-height: 45px;
+}
+
+#deleteConfirmModal #deleteError {
+    text-align: center;
+    margin-top: var(--spacing-xs);
+    font-size: 0.85rem;
+    line-height: 1.2;
+    min-height: 0;
+    padding: 0;
 }
 
 .error-message {
@@ -669,6 +737,13 @@ body {
         gap: var(--spacing-md);
     }
     
+    /* Increase icon size on mobile */
+    .note-btn {
+        font-size: 1.4rem;
+        width: 36px;
+        height: 36px;
+    }
+    
     .modal-content {
         width: 100%;
         height: 100vh;
@@ -676,23 +751,105 @@ body {
         border-radius: 0;
     }
     
-    .note-modal-container {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr;
+    /* Delete modal stays compact on mobile */
+    #deleteConfirmModal .modal-content {
+        width: 90%;
+        max-width: 380px;
+        height: auto;
+        border-radius: var(--radius-xl);
+        padding: var(--spacing-lg) var(--spacing-md);
     }
     
+    #deleteConfirmModal .modal-content h2 {
+        font-size: 1.4rem;
+    }
+    
+    #deleteConfirmModal .modal-buttons button {
+        padding: var(--spacing-sm) var(--spacing-lg);
+        font-size: 0.95rem;
+        min-width: 110px;
+        min-height: 44px;
+    }
+    
+    .note-modal-container {
+        grid-template-columns: 1fr;
+        position: relative;
+    }
+    
+    /* Drawer style for Edit History on mobile */
     .note-history {
-        border-right: none;
-        border-bottom: 2px solid var(--border-color);
-        max-height: 150px;
+        position: fixed;
+        left: -100%;
+        top: 0;
+        width: 80%;
+        max-width: 300px;
+        height: 100vh;
+        z-index: 1001;
+        border-right: 2px solid var(--border-color);
+        border-bottom: none;
+        max-height: none;
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    .note-history.open {
+        left: 0;
+    }
+    
+    /* Toggle button for history drawer */
+    .history-toggle {
+        display: block !important;
+        position: fixed;
+        top: 70px;
+        left: 10px;
+        z-index: 1000;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        font-size: 1.2rem;
+        cursor: pointer;
+        box-shadow: var(--shadow-lg);
+        transition: all var(--transition-fast);
+    }
+    
+    .history-toggle:hover {
+        transform: scale(1.1);
+    }
+    
+    .history-toggle i {
+        transition: transform var(--transition-fast);
+    }
+    
+    .history-toggle.open i {
+        transform: rotate(180deg);
+    }
+    
+    /* Overlay when drawer is open */
+    .history-overlay {
+        display: none !important;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+    }
+    
+    .history-overlay.active {
+        display: block !important;
     }
     
     .note-main {
-        padding: var(--spacing-lg);
+        padding: var(--spacing-md);
+        padding-top: 50px;
     }
     
     .note-main h2 {
-        font-size: 1.5rem;
+        font-size: 1.3rem;
     }
     
     .modal-buttons {
@@ -702,7 +859,10 @@ body {
     
     .modal-buttons button {
         flex: 1;
-        font-size: 0.85rem;
+        font-size: 0.99rem;
+        padding: var(--spacing-sm) var(--spacing-md);
+        justify-content: center;
+        min-height: 44px;
     }
     
     .note-info {
@@ -751,11 +911,28 @@ body {
         font-size: 1.1rem;
     }
     
-    .modal-content {
-        padding: var(--spacing-lg);
+    .note-main {
+        padding: var(--spacing-md);
     }
     
-    .modal-content h2 {
+    .note-main h2 {
         font-size: 1.3rem;
     }
+    
+    .note-history h3 {
+        font-size: 0.9rem;
+    }
+    
+    .history-item {
+        padding: var(--spacing-sm);
+    }
+}
+
+/* Hide toggle button on desktop by default */
+.history-toggle {
+    display: none;
+}
+
+.history-overlay {
+    display: none;
 }

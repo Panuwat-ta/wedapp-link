@@ -75,13 +75,25 @@ function customConfirm(message, callback) {
     `;
 
     document.body.appendChild(confirmBox);
+    
+    // Add to history for back button support
+    history.pushState({ modal: 'confirmDelete' }, '');
+    console.log('Confirm dialog opened with history support');
 
     confirmBox.querySelector('.cancel-btn').addEventListener('click', () => {
+        // Remove from history if it was added
+        if (window.history.state && window.history.state.modal === 'confirmDelete') {
+            history.back();
+        }
         confirmBox.remove();
         callback(false);
     });
 
     confirmBox.querySelector('.confirm-btn').addEventListener('click', () => {
+        // Remove from history if it was added
+        if (window.history.state && window.history.state.modal === 'confirmDelete') {
+            history.back();
+        }
         confirmBox.remove();
         callback(true);
     });
@@ -132,6 +144,10 @@ function customEditDialog(currentName, currentUrl, callback) {
 
     console.log('Appending editBox to body');
     document.body.appendChild(editBox);
+    
+    // Add to history for back button support
+    history.pushState({ modal: 'editLink' }, '');
+    
     console.log('editBox appended, checking if visible');
     console.log('editBox display:', window.getComputedStyle(editBox).display);
     console.log('editBox visibility:', window.getComputedStyle(editBox).visibility);
@@ -174,6 +190,10 @@ function customEditDialog(currentName, currentUrl, callback) {
 
     // ปุ่มยกเลิก
     editBox.querySelector('.cancel-btn').addEventListener('click', () => {
+        // Remove from history if it was added
+        if (window.history.state && window.history.state.modal === 'editLink') {
+            history.back();
+        }
         editBox.remove();
         callback(null);
     });
@@ -194,6 +214,10 @@ function customEditDialog(currentName, currentUrl, callback) {
             newUrl = editBox.querySelector('#editBothUrlInput').value;
         }
 
+        // Remove from history if it was added
+        if (window.history.state && window.history.state.modal === 'editLink') {
+            history.back();
+        }
         editBox.remove();
         callback({ newName, newUrl });
     });
@@ -392,17 +416,29 @@ function passwordPrompt(message, callback) {
     `;
 
     document.body.appendChild(promptBox);
+    
+    // Add to history for back button support
+    history.pushState({ modal: 'passwordPrompt' }, '');
+    console.log('Password prompt opened with history support');
 
     const passwordInput = promptBox.querySelector('.password-input');
     passwordInput.focus();
 
     promptBox.querySelector('.cancel-btn').addEventListener('click', () => {
+        // Remove from history if it was added
+        if (window.history.state && window.history.state.modal === 'passwordPrompt') {
+            history.back();
+        }
         promptBox.remove();
         callback(null);
     });
 
     promptBox.querySelector('.confirm-btn').addEventListener('click', () => {
         const password = passwordInput.value;
+        // Remove from history if it was added
+        if (window.history.state && window.history.state.modal === 'passwordPrompt') {
+            history.back();
+        }
         promptBox.remove();
         callback(password);
     });
@@ -410,6 +446,10 @@ function passwordPrompt(message, callback) {
     passwordInput.addEventListener('keyup', (e) => {
         if (e.key === 'Enter') {
             const password = passwordInput.value;
+            // Remove from history if it was added
+            if (window.history.state && window.history.state.modal === 'passwordPrompt') {
+                history.back();
+            }
             promptBox.remove();
             callback(password);
         }
@@ -566,6 +606,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             // Fetch and update user avatar
+    
+    // Handle back button for modals
+    window.addEventListener('popstate', function(e) {
+        console.log('Popstate triggered on date page', e.state);
+        
+        // Close any open modal/prompt
+        const editDialog = document.querySelector('.password-prompt');
+        if (editDialog) {
+            editDialog.remove();
+            console.log('Modal closed by back button');
+        }
+    });
             if (navUserAvatar && userEmail) {
                 fetch('/current-user', {
                     headers: {

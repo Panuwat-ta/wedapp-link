@@ -67,6 +67,21 @@ document.addEventListener('DOMContentLoaded', () => {
             confirmLogout('Are you sure you want to logout?', logout);
         });
     }
+    
+    // Handle back button for modals
+    window.addEventListener('popstate', function(e) {
+        const editModal = document.getElementById('editProfileModal');
+        const passwordPrompt = document.querySelector('.password-prompt');
+        
+        if (editModal && editModal.classList.contains('active')) {
+            e.preventDefault();
+            closeEditProfileModal();
+        } else if (passwordPrompt) {
+            e.preventDefault();
+            document.body.style.overflow = '';
+            passwordPrompt.remove();
+        }
+    });
 });
 
 function setActive(element) {
@@ -324,6 +339,9 @@ function showEditProfileModal() {
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
     
+    // Add to history for back button support
+    history.pushState({ modal: 'editProfile' }, '');
+    
     // Lock body scroll
     document.body.style.overflow = 'hidden';
 
@@ -434,6 +452,11 @@ function closeEditProfileModal() {
     const modal = document.getElementById('editProfileModal');
     if (modal) {
         modal.classList.remove('active');
+        
+        // Remove from history if it was added
+        if (window.history.state && window.history.state.modal === 'editProfile') {
+            history.back();
+        }
         
         // Unlock body scroll
         document.body.style.overflow = '';
@@ -554,6 +577,9 @@ function passwordPrompt(message, callback) {
 
     document.body.appendChild(promptBox);
     
+    // Add to history for back button support
+    history.pushState({ modal: 'passwordPrompt' }, '');
+    
     // Lock body scroll
     document.body.style.overflow = 'hidden';
 
@@ -561,6 +587,10 @@ function passwordPrompt(message, callback) {
     passwordInput.focus();
 
     promptBox.querySelector('.cancel-btn').addEventListener('click', () => {
+        // Remove from history if it was added
+        if (window.history.state && window.history.state.modal === 'passwordPrompt') {
+            history.back();
+        }
         // Unlock body scroll
         document.body.style.overflow = '';
         promptBox.remove();
@@ -569,6 +599,10 @@ function passwordPrompt(message, callback) {
 
     promptBox.querySelector('.confirm-btn').addEventListener('click', () => {
         const password = passwordInput.value;
+        // Remove from history if it was added
+        if (window.history.state && window.history.state.modal === 'passwordPrompt') {
+            history.back();
+        }
         // Unlock body scroll
         document.body.style.overflow = '';
         promptBox.remove();
@@ -578,6 +612,10 @@ function passwordPrompt(message, callback) {
     passwordInput.addEventListener('keyup', (e) => {
         if (e.key === 'Enter') {
             const password = passwordInput.value;
+            // Remove from history if it was added
+            if (window.history.state && window.history.state.modal === 'passwordPrompt') {
+                history.back();
+            }
             promptBox.remove();
             callback(password);
         }

@@ -133,6 +133,9 @@ document.addEventListener('DOMContentLoaded', () => {
             viewNoteModal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
             
+            // Add to history for back button support
+            history.pushState({ modal: 'viewNote' }, '');
+            
             // Show loading in content area
             viewNoteName.textContent = 'Loading...';
             viewNoteContent.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Loading note...</p></div>';
@@ -388,6 +391,11 @@ document.addEventListener('DOMContentLoaded', () => {
         viewNoteModal.classList.remove('active');
         document.body.style.overflow = ''; // Re-enable scrolling
         
+        // Remove from history if it was added
+        if (window.history.state && window.history.state.modal === 'viewNote') {
+            history.back();
+        }
+        
         // Clean up event listeners
         if (viewNoteModal._keyDownHandler) {
             document.removeEventListener('keydown', viewNoteModal._keyDownHandler);
@@ -399,6 +407,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     closeViewBtn.addEventListener('click', closeViewModal);
+    
+    // Handle back button
+    window.addEventListener('popstate', function(e) {
+        if (viewNoteModal.style.display === 'flex') {
+            e.preventDefault();
+            viewNoteModal.style.display = 'none';
+            viewNoteModal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    });
     
     // Copy note content button
     const copyNoteBtn = document.getElementById('copyNoteBtn');

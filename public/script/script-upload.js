@@ -383,6 +383,10 @@ uploadBtn.addEventListener('click', async () => {
     }
 
     folderPromptModal.style.display = 'block';
+    
+    // Add to history for back button support
+    history.pushState({ modal: 'folderPrompt' }, '');
+    
     selectedFolderId = null;
     confirmFolderSelect.disabled = true;
     await listFolders(FOLDER_ID);
@@ -391,12 +395,23 @@ uploadBtn.addEventListener('click', async () => {
 // Folder prompt event listeners
 cancelFolderSelect.addEventListener('click', () => {
     folderPromptModal.style.display = 'none';
+    
+    // Remove from history if it was added
+    if (window.history.state && window.history.state.modal === 'folderPrompt') {
+        history.back();
+    }
 });
 
 confirmFolderSelect.addEventListener('click', async () => {
     if (!selectedFolderId) return;
     
     folderPromptModal.style.display = 'none';
+    
+    // Remove from history if it was added
+    if (window.history.state && window.history.state.modal === 'folderPrompt') {
+        history.back();
+    }
+    
     clearMessages();
 
     // Check if there's an ongoing upload
@@ -683,6 +698,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (navUsername) {
                 navUsername.textContent = isLoggedIn;
             }
+    
+    // Handle back button for folder modal
+    window.addEventListener('popstate', function(e) {
+        const folderModal = document.getElementById('folderPrompt');
+        if (folderModal && folderModal.style.display === 'block') {
+            e.preventDefault();
+            folderModal.style.display = 'none';
+        }
+    });
             
             // Fetch and update user avatar
             if (navUserAvatar && userEmail) {

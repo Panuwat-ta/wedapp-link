@@ -121,11 +121,22 @@ function toggleForm(form) {
     // Show the requested container
     if (form === 'register') {
         registerContainer.style.display = 'block';
+        // Add to history for back button support
+        if (!window.history.state || window.history.state.form !== 'register') {
+            history.pushState({ form: 'register' }, '');
+            console.log('Pushed register form to history');
+        }
     } else if (form === 'forgot') {
         forgotPasswordContainer.style.display = 'block';
+        // Add to history for back button support
+        if (!window.history.state || window.history.state.form !== 'forgot') {
+            history.pushState({ form: 'forgot' }, '');
+            console.log('Pushed forgot form to history');
+        }
     } else {
-        // Default to login
+        // Default to login - just show it without manipulating history
         loginContainer.style.display = 'block';
+        console.log('Showing login form');
     }
 }
 
@@ -145,6 +156,11 @@ function showForgotPasswordPrompt() {
     document.getElementById('loginContainer').style.display = 'none';
     document.getElementById('registerContainer').style.display = 'none';
     document.getElementById('forgotPasswordContainer').style.display = 'block';
+    
+    // Add to history for back button support
+    if (!window.history.state || window.history.state.form !== 'forgot') {
+        history.pushState({ form: 'forgot' }, '');
+    }
 }
 
 // Check credentials and show reset form
@@ -231,4 +247,31 @@ document.addEventListener('DOMContentLoaded', () => {
             navLinks.classList.toggle('active');
         });
     }
+    
+    // Handle back button for form switching
+    window.addEventListener('popstate', function(e) {
+        console.log('Popstate triggered on login page', e.state);
+        
+        const loginContainer = document.getElementById('loginContainer');
+        const registerContainer = document.getElementById('registerContainer');
+        const forgotPasswordContainer = document.getElementById('forgotPasswordContainer');
+        
+        // Hide all containers
+        loginContainer.style.display = 'none';
+        registerContainer.style.display = 'none';
+        forgotPasswordContainer.style.display = 'none';
+        
+        // Show appropriate form based on history state
+        if (e.state && e.state.form === 'register') {
+            registerContainer.style.display = 'block';
+        } else if (e.state && e.state.form === 'forgot') {
+            forgotPasswordContainer.style.display = 'block';
+            // Reset forgot password form to credentials step
+            document.getElementById('credentialsForm').style.display = 'block';
+            document.getElementById('resetForm').style.display = 'none';
+        } else {
+            // Default to login
+            loginContainer.style.display = 'block';
+        }
+    });
 });

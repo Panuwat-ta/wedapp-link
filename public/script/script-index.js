@@ -14,6 +14,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load saved view preference, default to 'list'
     const savedView = localStorage.getItem('viewPreference') || 'list';
     toggleView(savedView);
+    
+    // Handle back button for modal
+    window.addEventListener('popstate', function(e) {
+        const modal = document.getElementById('imageModal');
+        if (modal && modal.classList.contains('active')) {
+            e.preventDefault();
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+    });
 });
 
 // Theme Management
@@ -320,6 +330,9 @@ function openModal(imageSrc, username, date) {
     modalUsername.textContent = username || 'Anonymous';
     modalDate.textContent = `Joined: ${date || 'Unknown date'}`;
     
+    // Add to history for back button support
+    history.pushState({ modal: 'imageModal' }, '');
+    
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
@@ -327,6 +340,12 @@ function openModal(imageSrc, username, date) {
 function closeModal() {
     const modal = document.getElementById('imageModal');
     modal.classList.remove('active');
+    
+    // Remove from history if it was added
+    if (window.history.state && window.history.state.modal === 'imageModal') {
+        history.back();
+    }
+    
     document.body.style.overflow = 'auto';
 }
 
