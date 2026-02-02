@@ -484,20 +484,23 @@ app.post('/check-user-exists', async (req, res) => {
   try {
     const usersCollection = client.db("Link").collection("User");
 
-    // Check if username or email already exists
+    // Check if username or email already exists (case-insensitive)
     const existingUser = await usersCollection.findOne({
       $or: [
-        { username: username },
-        { email: email }
+        { username: { $regex: new RegExp(`^${username}$`, 'i') } },
+        { email: { $regex: new RegExp(`^${email}$`, 'i') } }
       ]
     });
 
     if (existingUser) {
-      if (existingUser.username === username && existingUser.email === email) {
+      const usernameMatch = existingUser.username.toLowerCase() === username.toLowerCase();
+      const emailMatch = existingUser.email.toLowerCase() === email.toLowerCase();
+      
+      if (usernameMatch && emailMatch) {
         return res.status(400).json({ message: 'Username and email already exist' });
-      } else if (existingUser.username === username) {
+      } else if (usernameMatch) {
         return res.status(400).json({ message: 'Username already exists. Please choose another username.' });
-      } else if (existingUser.email === email) {
+      } else if (emailMatch) {
         return res.status(400).json({ message: 'Email already registered. Please use another email or login.' });
       }
     }
@@ -543,13 +546,14 @@ app.post('/send-verification-code', async (req, res) => {
     // Generate verification code
     const code = generateVerificationCode();
     
-    // Store code with expiration (3 minutes)
-    verificationCodes.set(email, {
+    // Store code with expiration (3 minutes) using lowercase email
+    const emailLower = email.toLowerCase();
+    verificationCodes.set(emailLower, {
       code: code,
       expiresAt: Date.now() + 3 * 60 * 1000 // 3 minutes
     });
 
-    console.log(`Generated verification code for ${email}: ${code}`);
+    console.log(`Generated verification code for ${emailLower}: ${code}`);
 
     // Configure email transporter
     const transporter = nodemailer.createTransport({
@@ -593,7 +597,7 @@ app.post('/send-verification-code', async (req, res) => {
     };
 
     await transporter.sendMail(mailOptions);
-    console.log(`Verification code sent successfully to ${email}`);
+    console.log(`Verification code sent successfully to ${emailLower}`);
     
     res.status(200).json({ 
       message: 'Verification code sent successfully',
@@ -623,15 +627,15 @@ app.post('/verify-and-register', upload.single('profileImage'), async (req, res)
   }
 
   try {
-    // Check verification code
-    const storedData = verificationCodes.get(email);
+    // Check verification code (case-insensitive email)
+    const storedData = verificationCodes.get(email.toLowerCase());
     
     if (!storedData) {
       return res.status(400).json({ message: 'Verification code not found or expired' });
     }
 
     if (Date.now() > storedData.expiresAt) {
-      verificationCodes.delete(email);
+      verificationCodes.delete(email.toLowerCase());
       return res.status(400).json({ message: 'Verification code expired' });
     }
 
@@ -642,30 +646,30 @@ app.post('/verify-and-register', upload.single('profileImage'), async (req, res)
     // Verification successful, proceed with registration
     const usersCollection = client.db("Link").collection("User");
 
-    // Check if username or email already exists
+    // Check if username or email already exists (case-insensitive)
     const existingUser = await usersCollection.findOne({
       $or: [
-        { username: username },
-        { email: email }
+        { username: { $regex: new RegExp(`^${username}$`, 'i') } },
+        { email: { $regex: new RegExp(`^${email}$`, 'i') } }
       ]
     });
 
     if (existingUser) {
-      verificationCodes.delete(email);
-      if (existingUser.username === username) {
+      verificationCodes.delete(email.toLowerCase());
+      if (existingUser.username.toLowerCase() === username.toLowerCase()) {
         return res.status(400).json({ message: 'Username already exists' });
       }
-      if (existingUser.email === email) {
+      if (existingUser.email.toLowerCase() === email.toLowerCase()) {
         return res.status(400).json({ message: 'Email already exists' });
       }
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    // Prepare user data
+    // Prepare user data - store email in lowercase for consistency
     const userData = {
       username,
-      email,
+      email: email.toLowerCase(),
       password: hashedPassword,
       emailVerified: true,
       createdAt: new Date()
@@ -687,7 +691,7 @@ app.post('/verify-and-register', upload.single('profileImage'), async (req, res)
     await usersCollection.insertOne(userData);
 
     // Remove verification code after successful registration
-    verificationCodes.delete(email);
+    verificationCodes.delete(email.toLowerCase());
 
     res.status(201).json({ message: 'User registered successfully' });
   } catch (error) {
@@ -705,9 +709,11 @@ app.post('/send-reset-code', async (req, res) => {
   }
 
   try {
-    // Check if email exists in database
+    // Check if email exists in database (case-insensitive)
     const usersCollection = client.db("Link").collection("User");
-    const user = await usersCollection.findOne({ email });
+    const user = await usersCollection.findOne({ 
+      email: { $regex: new RegExp(`^${email}$`, 'i') }
+    });
 
     if (!user) {
       return res.status(404).json({ message: 'Email not found' });
@@ -716,8 +722,9 @@ app.post('/send-reset-code', async (req, res) => {
     // Generate reset code
     const code = generateVerificationCode();
     
-    // Store code with expiration (3 minutes)
-    verificationCodes.set(`reset_${email}`, {
+    // Store code with expiration (3 minutes) using lowercase email
+    const emailLower = email.toLowerCase();
+    verificationCodes.set(`reset_${emailLower}`, {
       code: code,
       expiresAt: Date.now() + 3 * 60 * 1000 // 3 minutes
     });
@@ -772,15 +779,16 @@ app.post('/verify-reset-code', async (req, res) => {
   }
 
   try {
-    // Check verification code
-    const storedData = verificationCodes.get(`reset_${email}`);
+    // Check verification code using lowercase email
+    const emailLower = email.toLowerCase();
+    const storedData = verificationCodes.get(`reset_${emailLower}`);
     
     if (!storedData) {
       return res.status(400).json({ message: 'Reset code not found or expired' });
     }
 
     if (Date.now() > storedData.expiresAt) {
-      verificationCodes.delete(`reset_${email}`);
+      verificationCodes.delete(`reset_${emailLower}`);
       return res.status(400).json({ message: 'Reset code expired' });
     }
 
@@ -789,7 +797,7 @@ app.post('/verify-reset-code', async (req, res) => {
     }
 
     // Code is valid, mark it as verified (don't delete yet, need it for password reset)
-    verificationCodes.set(`reset_${email}`, {
+    verificationCodes.set(`reset_${emailLower}`, {
       ...storedData,
       verified: true
     });
@@ -810,24 +818,25 @@ app.post('/reset-password', async (req, res) => {
   }
 
   try {
-    // Check if code was verified
-    const storedData = verificationCodes.get(`reset_${email}`);
+    // Check if code was verified using lowercase email
+    const emailLower = email.toLowerCase();
+    const storedData = verificationCodes.get(`reset_${emailLower}`);
     
     if (!storedData || !storedData.verified) {
       return res.status(400).json({ message: 'Please verify reset code first' });
     }
 
     if (Date.now() > storedData.expiresAt) {
-      verificationCodes.delete(`reset_${email}`);
+      verificationCodes.delete(`reset_${emailLower}`);
       return res.status(400).json({ message: 'Reset session expired' });
     }
 
-    // Update password
+    // Update password (case-insensitive email search)
     const usersCollection = client.db("Link").collection("User");
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     
     const result = await usersCollection.updateOne(
-      { email: email },
+      { email: { $regex: new RegExp(`^${email}$`, 'i') } },
       { $set: { password: hashedPassword, updatedAt: new Date() } }
     );
 
@@ -836,7 +845,7 @@ app.post('/reset-password', async (req, res) => {
     }
 
     // Remove verification code after successful password reset
-    verificationCodes.delete(`reset_${email}`);
+    verificationCodes.delete(`reset_${emailLower}`);
 
     res.status(200).json({ message: 'Password reset successfully' });
   } catch (error) {
@@ -855,7 +864,11 @@ app.post('/login', async (req, res) => {
 
   try {
     const usersCollection = client.db("Link").collection("User");
-    const user = await usersCollection.findOne({ email });
+    
+    // Case-insensitive email search using regex
+    const user = await usersCollection.findOne({ 
+      email: { $regex: new RegExp(`^${email}$`, 'i') }
+    });
 
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password' });

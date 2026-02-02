@@ -504,6 +504,13 @@ async function resendVerificationCode() {
         return;
     }
 
+    const resendBtn = document.getElementById('resendBtn');
+    const originalBtnText = resendBtn.innerHTML;
+    
+    // Show loading state
+    resendBtn.disabled = true;
+    resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
     try {
         const response = await fetch('/send-verification-code', {
             method: 'POST',
@@ -550,13 +557,23 @@ async function resendVerificationCode() {
             
             // Restart 3-minute countdown
             startCountdown(180);
+            
+            // Reset button
+            resendBtn.disabled = false;
+            resendBtn.innerHTML = originalBtnText;
         } else {
             const error = await response.json();
             alertBox(error.message || 'Failed to resend verification code.', 'error');
+            // Reset button
+            resendBtn.disabled = false;
+            resendBtn.innerHTML = originalBtnText;
         }
     } catch (err) {
         console.error('Error resending verification code:', err);
         alertBox('An error occurred while resending verification code.', 'error');
+        // Reset button
+        resendBtn.disabled = false;
+        resendBtn.innerHTML = originalBtnText;
     }
 }
 
@@ -707,6 +724,7 @@ function showForgotPasswordPrompt() {
 // Send reset code to email
 async function sendResetCode() {
     const email = document.getElementById('resetEmail').value.trim();
+    const submitBtn = document.querySelector('#forgotPasswordForm .submit-btn');
 
     if (!isValidEmail(email)) {
         alertBox('Please enter a valid email address.', 'error');
@@ -717,6 +735,11 @@ async function sendResetCode() {
         alertBox('Please use a Gmail address.', 'error');
         return;
     }
+
+    // Show loading state
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
 
     try {
         const response = await fetch('/send-reset-code', {
@@ -738,6 +761,10 @@ async function sendResetCode() {
                 email: email,
                 expiresAt: expiresAt
             }));
+            
+            // Reset button before switching form
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
             
             toggleForm('resetCode');
             
@@ -771,10 +798,16 @@ async function sendResetCode() {
         } else {
             const error = await response.json();
             alertBox(error.message || 'Email not found.', 'error');
+            // Reset button
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
         }
     } catch (err) {
         console.error('Error sending reset code:', err);
         alertBox('An error occurred.', 'error');
+        // Reset button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
     }
 }
 
@@ -785,6 +818,13 @@ async function resendResetCode() {
         toggleForm('forgot');
         return;
     }
+
+    const resendBtn = document.getElementById('resendResetBtn');
+    const originalBtnText = resendBtn.innerHTML;
+    
+    // Show loading state
+    resendBtn.disabled = true;
+    resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
 
     try {
         const response = await fetch('/send-reset-code', {
@@ -832,13 +872,23 @@ async function resendResetCode() {
             
             // Restart 3-minute countdown
             startResetCountdown(180);
+            
+            // Reset button
+            resendBtn.disabled = false;
+            resendBtn.innerHTML = originalBtnText;
         } else {
             const error = await response.json();
             alertBox(error.message || 'Failed to resend code.', 'error');
+            // Reset button
+            resendBtn.disabled = false;
+            resendBtn.innerHTML = originalBtnText;
         }
     } catch (err) {
         console.error('Error resending reset code:', err);
         alertBox('An error occurred.', 'error');
+        // Reset button
+        resendBtn.disabled = false;
+        resendBtn.innerHTML = originalBtnText;
     }
 }
 
