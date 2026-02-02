@@ -1,9 +1,4 @@
 // script-data.js
-// Mobile menu toggle
-document.getElementById('menuToggle').addEventListener('click', function () {
-    document.getElementById('navLinks').classList.toggle('active');
-});
-
 // Function to highlight active navigation link
 function setActive(element) {
     document.querySelectorAll('nav a').forEach(link => {

@@ -615,10 +615,7 @@ function clearMessages() {
     errorMessage.style.display = 'none';
 }
 
-// Toggle mobile menu
-menuToggle.addEventListener('click', function() {
-    navLinks.classList.toggle('active');
-});
+// Mobile menu is handled by mobile-menu.js
 
 // Fetch environment variables
 async function fetchEnvVariables() {

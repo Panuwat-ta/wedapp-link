@@ -50,28 +50,8 @@ function updateThemeIcon() {
 
 // Mobile Menu
 function setupMobileMenu() {
-    const menuToggle = document.getElementById('menuToggle');
-    const navLinks = document.getElementById('navLinks');
-    const navUser = document.getElementById('navUser');
-    
-    if (menuToggle && navLinks) {
-        menuToggle.addEventListener('click', () => {
-            navLinks.classList.toggle('active');
-            if (navUser) {
-                navUser.classList.toggle('active');
-            }
-        });
-        
-        // Close menu when clicking a link
-        navLinks.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-                navLinks.classList.remove('active');
-                if (navUser) {
-                    navUser.classList.remove('active');
-                }
-            });
-        });
-    }
+    // Mobile menu is handled by mobile-menu.js
+    // This function is no longer needed
 }
 
 // View Toggle

@@ -10,6 +10,10 @@ body {
     color: var(--text-primary);
     line-height: 1.6;
     min-height: 100vh;
+    overflow-x: hidden;
+    max-width: 100vw;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 /* Visually hidden labels for accessibility */
@@ -184,6 +188,8 @@ body {
     -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .note-preview {

@@ -53,9 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentNoteId = null;
 
-    menuToggle.addEventListener('click', () => {
-        navLinks.classList.toggle('active');
-    });
+    // Mobile menu is handled by mobile-menu.js
 
     const username = localStorage.getItem('username');
 

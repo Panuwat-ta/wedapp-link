@@ -239,14 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     updateNavLinks(isLoggedIn);
 
-    // Menu toggle for mobile
-    const menuToggle = document.getElementById('menuToggle');
-    const navLinks = document.getElementById('navLinks');
-    if (menuToggle && navLinks) {
-        menuToggle.addEventListener('click', () => {
-            navLinks.classList.toggle('active');
-        });
-    }
+    // Mobile menu is handled by mobile-menu.js
     
     // Handle back button for form switching
     window.addEventListener('popstate', function(e) {

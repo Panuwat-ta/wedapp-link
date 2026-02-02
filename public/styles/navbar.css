@@ -174,17 +174,24 @@ nav a i {
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
+    .nav-container {
+        position: relative;
+    }
+    
     .menu-toggle {
         display: block;
         z-index: 101;
+        padding: var(--spacing-xs);
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        order: 3;
+        margin-left: 5px;
     }
     
     .nav-brand {
-        font-size: 1rem;
-        z-index: 101;
-    }
-    
-    .nav-brand span {
         display: none;
     }
     
@@ -211,15 +218,14 @@ nav a i {
         gap: var(--spacing-sm);
         z-index: 101;
         border: none;
+        flex: 1;
+        justify-content: flex-end;
+        align-items: center;
     }
     
     .nav-user * {
         border-left: none !important;
         border-right: none !important;
-    }
-    
-    .nav-container {
-        position: relative;
     }
     
     nav a {
@@ -230,24 +236,35 @@ nav a i {
     
     .user-profile {
         padding: var(--spacing-xs) var(--spacing-sm);
+        width: auto;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--spacing-sm);
+        order: 2;
     }
     
     .user-avatar-nav {
-        width: 28px;
-        height: 28px;
-        border-width: 1px;
+        width: 32px;
+        height: 32px;
+        border-width: 2px;
     }
     
     .user-name {
-        display: none;
+        display: block;
+        font-size: 0.9rem;
     }
     
     .theme-toggle-nav {
-        width: 36px;
-        height: 36px;
-        font-size: 1rem;
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
         outline: none;
         border: none;
+        padding: 0;
+        order: 1;
+        margin-right: auto;
     }
     
     .theme-toggle-nav:focus,
@@ -258,12 +275,4 @@ nav a i {
     }
 }
 
-@media (max-width: 480px) {
-    .nav-container {
-        padding: 0 var(--spacing-md);
-    }
-    
-    .nav-brand i {
-        font-size: 1.3rem;
-    }
-}
+

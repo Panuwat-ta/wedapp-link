@@ -10,6 +10,10 @@ body {
     color: var(--text-primary);
     line-height: 1.6;
     min-height: 100vh;
+    overflow-x: hidden;
+    max-width: 100vw;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .header {
@@ -225,6 +229,8 @@ body {
     align-items: center;
     gap: var(--spacing-sm);
     font-size: 0.9rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .file-name i {

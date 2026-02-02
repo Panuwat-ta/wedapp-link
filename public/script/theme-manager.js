@@ -29,30 +29,9 @@
         });
     }
     
-    // Mobile menu toggle
+    // Mobile menu is handled by mobile-menu.js
     window.setupMobileMenu = function() {
-        const menuToggle = document.getElementById('menuToggle');
-        const navLinks = document.getElementById('navLinks');
-        const navUser = document.getElementById('navUser');
-        
-        if (menuToggle && navLinks) {
-            menuToggle.addEventListener('click', () => {
-                navLinks.classList.toggle('active');
-                if (navUser) {
-                    navUser.classList.toggle('active');
-                }
-            });
-            
-            // Close menu when clicking a link
-            navLinks.querySelectorAll('a').forEach(link => {
-                link.addEventListener('click', () => {
-                    navLinks.classList.remove('active');
-                    if (navUser) {
-                        navUser.classList.remove('active');
-                    }
-                });
-            });
-        }
+        // This function is no longer needed
     };
     
     // Update navigation links based on login status

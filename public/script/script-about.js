@@ -1,7 +1,4 @@
-// Mobile menu toggle
-document.getElementById('menuToggle').addEventListener('click', function() {
-    document.getElementById('navLinks').classList.toggle('active');
-});
+// Mobile menu is handled by mobile-menu.js
 
 function setActive(element) {
     document.querySelectorAll('nav a').forEach(link => {
