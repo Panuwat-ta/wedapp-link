@@ -249,13 +249,8 @@ body {
 .file-view,
 .file-download-table {
     display: flex;
-    justify-content: flex-start;
-    gap: var(--spacing-xs);
-}
-
-/* Hide button container on desktop */
-.file-item-buttons {
-    display: none;
+    justify-content: center;
+    align-items: center;
 }
 
 /* Grid View */
@@ -543,23 +538,59 @@ body {
         color: var(--primary-color);
     }
     
-    /* Button container for mobile - horizontal layout */
-    .file-item-buttons {
-        display: flex;
-        gap: var(--spacing-sm);
-        width: 100%;
-    }
-    
+    /* Show buttons in mobile */
     .file-view,
     .file-download-table {
-        flex: 1;
         display: flex;
+        justify-content: center;
+        margin-top: var(--spacing-sm);
+    }
+    
+    .file-view {
+        order: 5;
+    }
+    
+    .file-download-table {
+        order: 6;
+    }
+    
+    /* Create button row */
+    .file-item {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto auto auto auto;
+        gap: var(--spacing-sm);
+    }
+    
+    .file-name {
+        grid-column: 1 / -1;
+    }
+    
+    .file-origin {
+        grid-column: 1 / -1;
+    }
+    
+    .file-date {
+        grid-column: 1 / -1;
+    }
+    
+    .file-size {
+        grid-column: 1 / -1;
+    }
+    
+    .file-view {
+        grid-column: 1;
+    }
+    
+    .file-download-table {
+        grid-column: 2;
     }
     
     .file-link,
     .file-download {
         width: 100%;
         justify-content: center;
+        padding: var(--spacing-sm);
     }
     
     .grid-container {

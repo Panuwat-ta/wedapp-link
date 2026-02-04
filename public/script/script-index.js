@@ -2,18 +2,39 @@
 let allData = [];
 let currentView = 'list'; // Changed default to 'list'
 let currentTheme = localStorage.getItem('theme') || 'dark';
+let isDataLoaded = false; // Flag to track if data has been loaded
 
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     initializeTheme();
     createModal();
-    fetchData();
     updateNavLinks();
     setupMobileMenu();
     
     // Load saved view preference, default to 'list'
     const savedView = localStorage.getItem('viewPreference') || 'list';
-    toggleView(savedView);
+    
+    // Set initial view without rendering (data not loaded yet)
+    currentView = savedView;
+    const gridBtn = document.querySelector('[data-view="grid"]');
+    const listBtn = document.querySelector('[data-view="list"]');
+    const gridView = document.getElementById('gridView');
+    const listView = document.getElementById('listView');
+    
+    if (savedView === 'grid') {
+        gridView.classList.add('active');
+        listView.classList.remove('active');
+        gridBtn.classList.add('active');
+        listBtn.classList.remove('active');
+    } else {
+        listView.classList.add('active');
+        gridView.classList.remove('active');
+        listBtn.classList.add('active');
+        gridBtn.classList.remove('active');
+    }
+    
+    // Fetch data after setting up the view
+    await fetchData();
     
     // Handle back button for modal
     window.addEventListener('popstate', function(e) {
@@ -69,13 +90,19 @@ function toggleView(view) {
         listView.classList.remove('active');
         gridBtn.classList.add('active');
         listBtn.classList.remove('active');
-        renderGridView(allData);
+        // Only render if data is loaded
+        if (isDataLoaded) {
+            renderGridView(allData);
+        }
     } else {
         listView.classList.add('active');
         gridView.classList.remove('active');
         listBtn.classList.add('active');
         gridBtn.classList.remove('active');
-        renderListView(allData);
+        // Only render if data is loaded
+        if (isDataLoaded) {
+            renderListView(allData);
+        }
     }
 }
 
@@ -96,6 +123,9 @@ async function fetchData() {
             return parseThaiDate(b.date) - parseThaiDate(a.date);
         });
         
+        // Mark data as loaded
+        isDataLoaded = true;
+        
         populateCategoryFilter();
         
         if (currentView === 'grid') {
@@ -106,6 +136,7 @@ async function fetchData() {
         
     } catch (error) {
         console.error('Error fetching data:', error);
+        isDataLoaded = true; // Mark as loaded even on error to prevent infinite loading
         showError(error.message);
     }
 }
@@ -247,15 +278,11 @@ function filterData() {
         );
     }
     
-    // Filter by search query
+    // Filter by search query (search only in link name)
     if (searchQuery) {
         filteredData = filteredData.filter(item => {
             const name = (item.name || '').toLowerCase();
-            const username = (item.username || '').toLowerCase();
-            const url = (item.url || '').toLowerCase();
-            return name.includes(searchQuery) || 
-                   username.includes(searchQuery) || 
-                   url.includes(searchQuery);
+            return name.includes(searchQuery);
         });
     }
     
