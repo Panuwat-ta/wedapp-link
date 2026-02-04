@@ -7,10 +7,77 @@ const JSZip = require('jszip');
 const https = require('https');
 const multer = require('multer');
 const nodemailer = require('nodemailer');
+const fs = require('fs');
+const { minify: minifyJS } = require('terser');
+const CleanCSS = require('clean-css');
 const upload = multer();
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+// Middleware to minify CSS and JS files
+app.use(async (req, res, next) => {
+  const filePath = path.join(__dirname, 'public', req.path);
+  
+  // Check if file is CSS or JS
+  if (req.path.endsWith('.css') || req.path.endsWith('.js')) {
+    try {
+      // Check if file exists
+      if (fs.existsSync(filePath)) {
+        const content = fs.readFileSync(filePath, 'utf8');
+        
+        if (req.path.endsWith('.css')) {
+          // Minify CSS
+          const output = new CleanCSS({
+            level: 2,
+            compatibility: 'ie9'
+          }).minify(content);
+          
+          res.setHeader('Content-Type', 'text/css');
+          res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
+          return res.send(output.styles);
+        } else if (req.path.endsWith('.js')) {
+          // Minify JS
+          const result = await minifyJS(content, {
+            compress: {
+              dead_code: true,
+              drop_console: false,
+              drop_debugger: true,
+              keep_classnames: true,
+              keep_fnames: true
+            },
+            mangle: false, // Don't mangle names to keep code readable
+            format: {
+              comments: false
+            }
+          });
+          
+          res.setHeader('Content-Type', 'application/javascript');
+          res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
+          return res.send(result.code);
+        }
+      }
+    } catch (error) {
+      console.error(`Error minifying ${req.path}:`, error);
+      // If minification fails, serve original file
+    }
+  }
+  
+  next();
+});
+
+// Serve static files with smart caching
+app.use(express.static(path.join(__dirname, 'public'), {
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, filePath) => {
+    // Cache images for 7 days (rarely change)
+    if (filePath.match(/\.(jpg|jpeg|png|gif|ico|svg)$/)) {
+      res.setHeader('Cache-Control', 'public, max-age=604800');
+    }
+    // CSS/JS caching is handled by minify middleware above
+  }
+}));
 
 // MongoDB URI and Client
 const uri = process.env.MONGODB_URI;
@@ -41,22 +108,6 @@ connectToMongoDB();
 
 // Middleware for parsing JSON
 app.use(express.json());
-
-// Serve static files with smart caching
-app.use(express.static(path.join(__dirname, 'public'), {
-  etag: true,
-  lastModified: true,
-  setHeaders: (res, filePath) => {
-    // Cache images for 7 days (rarely change)
-    if (filePath.match(/\.(jpg|jpeg|png|gif|ico|svg)$/)) {
-      res.setHeader('Cache-Control', 'public, max-age=604800');
-    }
-    // Cache CSS/JS for 1 hour with revalidation
-    else if (filePath.match(/\.(css|js)$/)) {
-      res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
-    }
-  }
-}));
 
 // Route สำหรับหน้า Home
 app.get('/', (req, res) => {
