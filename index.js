@@ -42,8 +42,21 @@ connectToMongoDB();
 // Middleware for parsing JSON
 app.use(express.json());
 
-// Serve static files
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve static files with smart caching
+app.use(express.static(path.join(__dirname, 'public'), {
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, filePath) => {
+    // Cache images for 7 days (rarely change)
+    if (filePath.match(/\.(jpg|jpeg|png|gif|ico|svg)$/)) {
+      res.setHeader('Cache-Control', 'public, max-age=604800');
+    }
+    // Cache CSS/JS for 1 hour with revalidation
+    else if (filePath.match(/\.(css|js)$/)) {
+      res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
+    }
+  }
+}));
 
 // Route สำหรับหน้า Home
 app.get('/', (req, res) => {
