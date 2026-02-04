@@ -422,6 +422,10 @@ body {
     text-align: center;
     padding: var(--spacing-2xl);
     color: var(--text-secondary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .spinner {
@@ -434,11 +438,20 @@ body {
     margin: 0 auto var(--spacing-md);
 }
 
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 /* Empty State */
 .empty-state {
     text-align: center;
     padding: var(--spacing-2xl);
     color: var(--text-secondary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .empty-state i {
@@ -589,12 +602,36 @@ body {
     }
     
     .data-table tbody {
-        display: flex;
-        flex-direction: column;
-        gap: var(--spacing-md);
+        display: block;
     }
     
-    .data-table tr {
+    /* Keep loading/empty state rows centered */
+    .data-table tbody tr:has(.loading-state),
+    .data-table tbody tr:has(.empty-state) {
+        display: block;
+        width: 100%;
+        min-height: 300px;
+    }
+    
+    .data-table tbody tr:has(.loading-state) td,
+    .data-table tbody tr:has(.empty-state) td {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: var(--spacing-2xl);
+        min-height: 300px;
+        width: 100%;
+    }
+    
+    .data-table tbody tr:has(.loading-state) td:before,
+    .data-table tbody tr:has(.empty-state) td:before {
+        display: none;
+    }
+    
+    /* Regular data rows as cards */
+    .data-table tbody tr:not(:has(.loading-state)):not(:has(.empty-state)) {
         display: flex;
         flex-direction: column;
         background: var(--bg-secondary);
@@ -602,9 +639,10 @@ body {
         box-shadow: var(--shadow-sm);
         padding: var(--spacing-md);
         border: 2px solid var(--border-color);
+        margin-bottom: var(--spacing-md);
     }
     
-    .data-table td {
+    .data-table tbody tr:not(:has(.loading-state)):not(:has(.empty-state)) td {
         display: flex;
         padding: var(--spacing-sm) 0;
         border-bottom: none;
@@ -612,7 +650,7 @@ body {
         overflow-wrap: break-word;
     }
     
-    .data-table td:before {
+    .data-table tbody tr:not(:has(.loading-state)):not(:has(.empty-state)) td:before {
         content: attr(data-label);
         font-weight: 600;
         width: 100px;
@@ -620,13 +658,13 @@ body {
         color: var(--primary-color);
     }
     
-    .data-table td > * {
+    .data-table tbody tr:not(:has(.loading-state)):not(:has(.empty-state)) td > * {
         word-break: break-all;
         overflow-wrap: break-word;
         flex: 1;
     }
     
-    .data-table td:last-child {
+    .data-table tbody tr:not(:has(.loading-state)):not(:has(.empty-state)) td:last-child {
         padding-bottom: 0;
     }
 }
