@@ -353,6 +353,21 @@ body {
     border-bottom: 1px solid var(--border-color);
 }
 
+/* Loading and Empty state cells - centered horizontally, top vertically */
+.data-table td.loading-state,
+.data-table td.empty-state {
+    padding: var(--spacing-xl) var(--spacing-2xl);
+    text-align: center;
+    vertical-align: top;
+    height: 400px;
+}
+
+.data-table td.loading-state > *,
+.data-table td.empty-state > * {
+    display: block;
+    margin: 0 auto;
+}
+
 .data-table tr:last-child td {
     border-bottom: none;
 }
@@ -363,6 +378,12 @@ body {
 
 .data-table tbody tr:hover {
     background: var(--bg-tertiary);
+}
+
+/* Don't apply hover effect to loading/empty rows */
+.data-table tbody tr:has(.loading-state):hover,
+.data-table tbody tr:has(.empty-state):hover {
+    background: var(--bg-secondary);
 }
 
 .data-table a {
@@ -422,10 +443,14 @@ body {
     text-align: center;
     padding: var(--spacing-2xl);
     color: var(--text-secondary);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+}
+
+.loading-state .spinner {
+    margin: 0 auto var(--spacing-md);
+}
+
+.loading-state p {
+    margin: 0;
 }
 
 .spinner {
@@ -435,7 +460,6 @@ body {
     width: 40px;
     height: 40px;
     animation: spin 1s linear infinite;
-    margin: 0 auto var(--spacing-md);
 }
 
 @keyframes spin {
@@ -448,22 +472,23 @@ body {
     text-align: center;
     padding: var(--spacing-2xl);
     color: var(--text-secondary);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
 }
 
 .empty-state i {
     font-size: 4rem;
     color: var(--text-tertiary);
     margin-bottom: var(--spacing-lg);
+    display: block;
 }
 
 .empty-state h3 {
     font-size: 1.5rem;
     margin-bottom: var(--spacing-sm);
     color: var(--text-primary);
+}
+
+.empty-state p {
+    margin: 0;
 }
 
 /* Modal */
@@ -605,7 +630,7 @@ body {
         display: block;
     }
     
-    /* Keep loading/empty state rows centered */
+    /* Keep loading/empty state rows centered horizontally, top vertically */
     .data-table tbody tr:has(.loading-state),
     .data-table tbody tr:has(.empty-state) {
         display: block;
@@ -618,9 +643,9 @@ body {
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start;
         text-align: center;
-        padding: var(--spacing-2xl);
+        padding: var(--spacing-xl) var(--spacing-2xl);
         min-height: 300px;
         width: 100%;
     }
