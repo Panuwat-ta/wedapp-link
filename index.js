@@ -176,13 +176,15 @@ app.get('/add-note.html', (req, res) => {
 // API endpoint for fetching notes
 app.get('/api/notes', async (req, res) => {
   const { username } = req.query;
-  if (!username) {
-    return res.status(400).send('Username is required');
-  }
 
   try {
     const collection = client.db("Link").collection("notes");
-    const notes = await collection.find({ username }).sort({ createdAt: -1 }).toArray();
+    
+    // If username is provided, filter by username
+    // Otherwise, return all notes
+    const query = username ? { username } : {};
+    
+    const notes = await collection.find(query).sort({ createdAt: -1 }).toArray();
     res.json(notes);
   } catch (error) {
     console.error("Error fetching notes:", error);
