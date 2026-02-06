@@ -641,7 +641,7 @@ app.post('/send-verification-code', async (req, res) => {
 
     // Send email
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: `"Data Links" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: 'Email Verification Code - Data Links',
       html: `
@@ -806,7 +806,7 @@ app.post('/send-reset-code', async (req, res) => {
 
     // Send email
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: `"Data Links" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: 'Password Reset Code - Data Links',
       html: `
@@ -1882,7 +1882,7 @@ app.post('/send-delete-verification', async (req, res) => {
 
     // Send email
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: `"Data Links" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: 'Account Deletion Verification - Data Links',
       html: `
