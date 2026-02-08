@@ -320,7 +320,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`/api/notes/${currentNoteId}`, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'x-username': username
                 },
                 body: JSON.stringify({ content, noteName })
             });
