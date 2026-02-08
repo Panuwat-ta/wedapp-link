@@ -100,10 +100,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchNotes() {
         // Show loading state
-        notesList.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Loading existing notes...</p></div>';
+        notesList.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Loading notes...</p></div>';
         
         try {
-            const response = await fetch(`/api/notes?username=${username}`);
+            // Fetch all notes without username filter
+            const response = await fetch('/api/notes');
             if (response.ok) {
                 const notes = await response.json();
                 // Sort notes by last modified date (newest first)
