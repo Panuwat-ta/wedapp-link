@@ -202,7 +202,7 @@ body {
 
 .grid-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+    grid-template-columns: 1fr;
     gap: var(--spacing-lg);
     width: 100%;
 }
@@ -215,6 +215,9 @@ body {
     transition: all var(--transition-fast);
     border: 2px solid var(--border-color);
     animation: fadeIn 0.3s ease;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .link-card:hover {
@@ -294,11 +297,14 @@ body {
 
 .card-actions {
     display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
     gap: var(--spacing-sm);
 }
 
 .card-btn {
     flex: 1;
+    min-width: 0;
     padding: var(--spacing-sm) var(--spacing-md);
     border: none;
     border-radius: var(--radius-md);
@@ -311,6 +317,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: var(--spacing-sm);
+    white-space: nowrap;
 }
 
 .card-btn:hover {
@@ -620,9 +627,7 @@ body {
 
 /* Responsive Design */
 @media (max-width: 1024px) {
-    .grid-container {
-        grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr));
-    }
+    /* Grid container now uses 1fr globally, removed minmax override */
 
     .container {
         padding: 0 var(--spacing-md) var(--spacing-xl);
@@ -660,9 +665,7 @@ body {
         justify-content: space-between;
     }
 
-    .grid-container {
-        grid-template-columns: 1fr;
-    }
+
 
     /* Mobile Table */
     .data-table {
@@ -806,6 +809,13 @@ body {
         padding: var(--spacing-sm) var(--spacing-md);
         font-size: 0.85rem;
     }
+
+    .card-actions {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: var(--spacing-sm);
+    }
 }
 
 @media (max-width: 480px) {
@@ -818,5 +828,13 @@ body {
         padding: var(--spacing-xs) var(--spacing-sm);
         font-size: 0.8rem;
         border-radius: var(--radius-md);
+
+    }
+
+    .card-actions {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: var(--spacing-sm);
     }
 }
