@@ -362,8 +362,8 @@ body {
     height: 400px;
 }
 
-.data-table td.loading-state > *,
-.data-table td.empty-state > * {
+.data-table td.loading-state>*,
+.data-table td.empty-state>* {
     display: block;
     margin: 0 auto;
 }
@@ -438,6 +438,17 @@ body {
     transform: translateY(-2px);
 }
 
+.secondary-btn {
+    background: transparent;
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+}
+
+.secondary-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
 /* Loading State */
 .loading-state {
     text-align: center;
@@ -463,8 +474,13 @@ body {
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* Empty State */
@@ -570,12 +586,44 @@ body {
     background: var(--bg-primary);
 }
 
+/* QR Code Modal Styles */
+.qr-modal-content {
+    text-align: center;
+    min-width: 320px;
+}
+
+.qr-modal-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-lg);
+    margin-top: var(--spacing-md);
+    word-break: break-all;
+}
+
+.qr-code-wrapper {
+    background: white;
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.qr-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
     .grid-container {
         grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr));
     }
-    
+
     .container {
         padding: 0 var(--spacing-md) var(--spacing-xl);
     }
@@ -586,50 +634,50 @@ body {
         flex-direction: column;
         text-align: center;
     }
-    
+
     .header-icon {
         height: 80px;
     }
-    
+
     .header-text h1 {
         font-size: 1.8rem;
     }
-    
+
     .header-text p {
         font-size: 1rem;
     }
-    
+
     .controls-bar {
         flex-direction: column;
         align-items: stretch;
     }
-    
+
     .search-container {
         max-width: 100%;
     }
-    
+
     .view-controls {
         justify-content: space-between;
     }
-    
+
     .grid-container {
         grid-template-columns: 1fr;
     }
-    
+
     /* Mobile Table */
     .data-table {
         display: block;
         overflow-x: auto;
     }
-    
+
     .data-table thead {
         display: none;
     }
-    
+
     .data-table tbody {
         display: block;
     }
-    
+
     /* Keep loading/empty state rows centered horizontally, top vertically */
     .data-table tbody tr:has(.loading-state),
     .data-table tbody tr:has(.empty-state) {
@@ -637,7 +685,7 @@ body {
         width: 100%;
         min-height: 300px;
     }
-    
+
     .data-table tbody tr:has(.loading-state) td,
     .data-table tbody tr:has(.empty-state) td {
         display: flex;
@@ -649,12 +697,12 @@ body {
         min-height: 300px;
         width: 100%;
     }
-    
+
     .data-table tbody tr:has(.loading-state) td:before,
     .data-table tbody tr:has(.empty-state) td:before {
         display: none;
     }
-    
+
     /* Regular data rows as cards */
     .data-table tbody tr:not(:has(.loading-state)):not(:has(.empty-state)) {
         display: flex;
@@ -666,7 +714,7 @@ body {
         border: 2px solid var(--border-color);
         margin-bottom: var(--spacing-md);
     }
-    
+
     .data-table tbody tr:not(:has(.loading-state)):not(:has(.empty-state)) td {
         display: flex;
         padding: var(--spacing-sm) 0;
@@ -674,7 +722,7 @@ body {
         word-wrap: break-word;
         overflow-wrap: break-word;
     }
-    
+
     .data-table tbody tr:not(:has(.loading-state)):not(:has(.empty-state)) td:before {
         content: attr(data-label);
         font-weight: 600;
@@ -682,13 +730,13 @@ body {
         flex-shrink: 0;
         color: var(--primary-color);
     }
-    
-    .data-table tbody tr:not(:has(.loading-state)):not(:has(.empty-state)) td > * {
+
+    .data-table tbody tr:not(:has(.loading-state)):not(:has(.empty-state)) td>* {
         word-break: break-all;
         overflow-wrap: break-word;
         flex: 1;
     }
-    
+
     .data-table tbody tr:not(:has(.loading-state)):not(:has(.empty-state)) td:last-child {
         padding-bottom: 0;
     }
@@ -698,13 +746,77 @@ body {
     .header {
         padding: var(--spacing-lg);
     }
-    
+
     .header-text h1 {
         font-size: 1.5rem;
     }
-    
+
     .action-button {
         width: 100%;
         justify-content: center;
+    }
+}
+
+/* Alert Box */
+.alert-box {
+    position: fixed;
+    top: 80px;
+    right: var(--spacing-lg);
+    max-width: 400px;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    opacity: 0;
+    transform: translateX(400px);
+    transition: all var(--transition-normal);
+    font-weight: 500;
+    display: none;
+    pointer-events: none;
+}
+
+.alert-box.success {
+    background: var(--success-color);
+    color: white;
+}
+
+.alert-box.error {
+    background: var(--error-color);
+    color: white;
+}
+
+.alert-box.warning {
+    background: var(--error-color);
+    color: white;
+}
+
+.alert-box.fade-out {
+    opacity: 0;
+    transform: translateX(400px);
+}
+
+/* Alert Box Responsive */
+@media (max-width: 768px) {
+    .alert-box {
+        top: auto;
+        bottom: var(--spacing-lg);
+        right: var(--spacing-md);
+        left: auto;
+        max-width: 280px;
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .alert-box {
+        top: auto;
+        bottom: var(--spacing-md);
+        right: var(--spacing-sm);
+        left: auto;
+        max-width: 250px;
+        padding: var(--spacing-xs) var(--spacing-sm);
+        font-size: 0.8rem;
+        border-radius: var(--radius-md);
     }
 }

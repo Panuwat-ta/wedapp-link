@@ -10,17 +10,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     createModal();
     updateNavLinks();
     setupMobileMenu();
-    
+
     // Load saved view preference, default to 'list'
     const savedView = localStorage.getItem('viewPreference') || 'list';
-    
+
     // Set initial view without rendering (data not loaded yet)
     currentView = savedView;
     const gridBtn = document.querySelector('[data-view="grid"]');
     const listBtn = document.querySelector('[data-view="list"]');
     const gridView = document.getElementById('gridView');
     const listView = document.getElementById('listView');
-    
+
     if (savedView === 'grid') {
         gridView.classList.add('active');
         listView.classList.remove('active');
@@ -32,12 +32,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         listBtn.classList.add('active');
         gridBtn.classList.remove('active');
     }
-    
+
     // Fetch data after setting up the view
     await fetchData();
-    
+
     // Handle back button for modal
-    window.addEventListener('popstate', function(e) {
+    window.addEventListener('popstate', function (e) {
         const modal = document.getElementById('imageModal');
         if (modal && modal.classList.contains('active')) {
             e.preventDefault();
@@ -79,12 +79,12 @@ function setupMobileMenu() {
 function toggleView(view) {
     currentView = view;
     localStorage.setItem('viewPreference', view);
-    
+
     const gridView = document.getElementById('gridView');
     const listView = document.getElementById('listView');
     const gridBtn = document.querySelector('[data-view="grid"]');
     const listBtn = document.querySelector('[data-view="list"]');
-    
+
     if (view === 'grid') {
         gridView.classList.add('active');
         listView.classList.remove('active');
@@ -111,29 +111,29 @@ async function fetchData() {
     try {
         showLoading();
         const response = await fetch('/data');
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         // Sort by date (newest first)
         allData = data.sort((a, b) => {
             return parseThaiDate(b.date) - parseThaiDate(a.date);
         });
-        
+
         // Mark data as loaded
         isDataLoaded = true;
-        
+
         populateCategoryFilter();
-        
+
         if (currentView === 'grid') {
             renderGridView(allData);
         } else {
             renderListView(allData);
         }
-        
+
     } catch (error) {
         console.error('Error fetching data:', error);
         isDataLoaded = true; // Mark as loaded even on error to prevent infinite loading
@@ -158,13 +158,13 @@ function parseThaiDate(dateStr) {
 function populateCategoryFilter() {
     const categoryFilter = document.getElementById('categoryFilter');
     const categories = new Set(['all']);
-    
+
     allData.forEach(item => {
         if (item.username) {
             categories.add(item.username);
         }
     });
-    
+
     categoryFilter.innerHTML = '<option value="all">All Categories</option>';
     Array.from(categories).sort().forEach(category => {
         if (category !== 'all') {
@@ -179,7 +179,7 @@ function populateCategoryFilter() {
 // Render Grid View
 function renderGridView(data) {
     const gridContainer = document.getElementById('gridContainer');
-    
+
     if (data.length === 0) {
         gridContainer.innerHTML = `
             <div class="empty-state" style="grid-column: 1/-1;">
@@ -190,7 +190,7 @@ function renderGridView(data) {
         `;
         return;
     }
-    
+
     gridContainer.innerHTML = data.map(item => `
         <div class="link-card fade-in">
             <div class="card-header">
@@ -211,8 +211,11 @@ function renderGridView(data) {
                 </a>
             </div>
             <div class="card-actions">
+                <button class="card-btn secondary-btn" onclick="openQrModal('${item.url}', '${escapeHtml(item.name).replace(/'/g, "\\'")}')">
+                    <i class="fas fa-qrcode"></i> QR
+                </button>
                 <button class="card-btn" onclick="window.open('${item.url}', '_blank')">
-                    <i class="fas fa-external-link-alt"></i> Open Link
+                    <i class="fas fa-external-link-alt"></i> Open
                 </button>
             </div>
         </div>
@@ -222,11 +225,11 @@ function renderGridView(data) {
 // Render List View
 function renderListView(data) {
     const tableBody = document.querySelector('#dataTable tbody');
-    
+
     if (data.length === 0) {
         tableBody.innerHTML = `
             <tr>
-                <td colspan="5" class="empty-state">
+                <td colspan="6" class="empty-state">
                     <i class="fas fa-link"></i>
                     <h3>No links found</h3>
                     <p>Start by adding your first link!</p>
@@ -235,7 +238,7 @@ function renderListView(data) {
         `;
         return;
     }
-    
+
     tableBody.innerHTML = data.map(item => `
         <tr class="fade-in">
             <td data-label="Date">${item.date}</td>
@@ -255,6 +258,11 @@ function renderListView(data) {
                     <span>${item.username || 'Anonymous'}</span>
                 </div>
             </td>
+            <td data-label="QR Code">
+                <button class="action-btn secondary-btn" onclick="openQrModal('${item.url}', '${escapeHtml(item.name).replace(/'/g, "\\'")}')">
+                    <i class="fas fa-qrcode"></i> QR
+                </button>
+            </td>
             <td data-label="Actions">
                 <button class="action-btn" onclick="window.open('${item.url}', '_blank')">
                     <i class="fas fa-external-link-alt"></i> Open
@@ -268,16 +276,16 @@ function renderListView(data) {
 function filterData() {
     const searchQuery = document.getElementById('searchBox').value.toLowerCase();
     const categoryFilter = document.getElementById('categoryFilter').value;
-    
+
     let filteredData = allData;
-    
+
     // Filter by category
     if (categoryFilter !== 'all') {
-        filteredData = filteredData.filter(item => 
+        filteredData = filteredData.filter(item =>
             item.username === categoryFilter
         );
     }
-    
+
     // Filter by search query (search only in link name)
     if (searchQuery) {
         filteredData = filteredData.filter(item => {
@@ -285,7 +293,7 @@ function filterData() {
             return name.includes(searchQuery);
         });
     }
-    
+
     if (currentView === 'grid') {
         renderGridView(filteredData);
     } else {
@@ -294,6 +302,8 @@ function filterData() {
 }
 
 // Modal Functions
+let currentQrCode = null;
+
 function createModal() {
     const modalHTML = `
         <div class="modal-overlay" id="imageModal">
@@ -306,20 +316,37 @@ function createModal() {
                 </div>
             </div>
         </div>
+        <div class="modal-overlay" id="qrModal">
+            <div class="modal-content qr-modal-content">
+                <button class="close-modal" onclick="closeQrModal()">&times;</button>
+                <h3 id="qrModalTitle" class="qr-modal-title"></h3>
+                <div id="qrCodeContainer" class="qr-code-wrapper"></div>
+                <div class="modal-actions qr-actions">
+                    <button class="action-btn" onclick="downloadQrCode()"><i class="fas fa-download"></i> Download</button>
+                    <button class="action-btn secondary-btn" onclick="copyQrCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                </div>
+            </div>
+        </div>
     `;
     document.body.insertAdjacentHTML('beforeend', modalHTML);
-    
+
     // Close on overlay click
-    document.getElementById('imageModal').addEventListener('click', function(e) {
+    document.getElementById('imageModal').addEventListener('click', function (e) {
         if (e.target === this) {
             closeModal();
         }
     });
-    
+    document.getElementById('qrModal').addEventListener('click', function (e) {
+        if (e.target === this) {
+            closeQrModal();
+        }
+    });
+
     // Close on Escape key
-    document.addEventListener('keydown', function(e) {
+    document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {
             closeModal();
+            closeQrModal();
         }
     });
 }
@@ -329,17 +356,17 @@ function openModal(imageSrc, username, date) {
     const modalImage = document.getElementById('modalImage');
     const modalUsername = document.getElementById('modalUsername');
     const modalDate = document.getElementById('modalDate');
-    
+
     modalImage.src = imageSrc;
-    modalImage.onerror = function() {
+    modalImage.onerror = function () {
         this.src = '/img/b1.jpg';
     };
     modalUsername.textContent = username || 'Anonymous';
     modalDate.textContent = `Joined: ${date || 'Unknown date'}`;
-    
+
     // Add to history for back button support
     history.pushState({ modal: 'imageModal' }, '');
-    
+
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
@@ -347,13 +374,94 @@ function openModal(imageSrc, username, date) {
 function closeModal() {
     const modal = document.getElementById('imageModal');
     modal.classList.remove('active');
-    
+
     // Remove from history if it was added
     if (window.history.state && window.history.state.modal === 'imageModal') {
         history.back();
     }
-    
+
     document.body.style.overflow = 'auto';
+}
+
+function openQrModal(url, name) {
+    const modal = document.getElementById('qrModal');
+    const title = document.getElementById('qrModalTitle');
+    const container = document.getElementById('qrCodeContainer');
+
+    title.textContent = name;
+    container.innerHTML = ''; // Clear previous
+
+    // Create new QR Code
+    currentQrCode = new QRCode(container, {
+        text: url,
+        width: 200,
+        height: 200,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+    });
+
+    history.pushState({ modal: 'qrModal' }, '');
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeQrModal() {
+    const modal = document.getElementById('qrModal');
+    modal.classList.remove('active');
+
+    if (window.history.state && window.history.state.modal === 'qrModal') {
+        history.back();
+    }
+    document.body.style.overflow = 'auto';
+}
+
+function downloadQrCode() {
+    const container = document.getElementById('qrCodeContainer');
+    const canvas = container.querySelector('canvas');
+    if (canvas) {
+        const link = document.createElement('a');
+        link.download = 'qrcode.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    }
+}
+
+async function copyQrCode(buttonElement) {
+    const container = document.getElementById('qrCodeContainer');
+    const canvas = container.querySelector('canvas');
+    if (canvas) {
+        try {
+            canvas.toBlob(async blob => {
+                const item = new ClipboardItem({ 'image/png': blob });
+                await navigator.clipboard.write([item]);
+                alertBox('QR Code คัดลอกแล้ว / Copied!', 'success');
+
+                // Visual feedback on the button
+                if (buttonElement) {
+                    const originalHTML = buttonElement.innerHTML;
+                    buttonElement.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    buttonElement.classList.remove('secondary-btn');
+                    buttonElement.classList.add('success-btn'); // optional styling
+                    buttonElement.style.backgroundColor = 'var(--success-color)';
+                    buttonElement.style.color = 'white';
+                    buttonElement.style.borderColor = 'var(--success-color)';
+
+                    setTimeout(() => {
+                        buttonElement.innerHTML = originalHTML;
+                        buttonElement.classList.add('secondary-btn');
+                        buttonElement.classList.remove('success-btn');
+                        buttonElement.style.backgroundColor = '';
+                        buttonElement.style.color = '';
+                        buttonElement.style.borderColor = '';
+                    }, 2000);
+                }
+            });
+        } catch (err) {
+            console.error('Failed to copy image: ', err);
+            alertBox('เบราว์เซอร์นี้ไม่รองรับการคัดลอกรูป / Failed to copy QR code.', 'error');
+        }
+    }
 }
 
 // Utility Functions
@@ -379,7 +487,7 @@ function showLoading() {
     } else {
         document.querySelector('#dataTable tbody').innerHTML = `
             <tr>
-                <td colspan="5" class="loading-state">
+                <td colspan="6" class="loading-state">
                     <div class="spinner"></div>
                     <p>Loading data...</p>
                 </td>
@@ -399,16 +507,42 @@ function showError(message) {
             </button>
         </div>
     `;
-    
+
     if (currentView === 'grid') {
         document.getElementById('gridContainer').innerHTML = errorHTML;
     } else {
         document.querySelector('#dataTable tbody').innerHTML = `
             <tr>
-                <td colspan="5">${errorHTML}</td>
+                <td colspan="6">${errorHTML}</td>
             </tr>
         `;
     }
+}
+
+function alertBox(message, type = 'info') {
+    const alertElement = document.getElementById('alertBox');
+    if (!alertElement) return;
+
+    alertElement.textContent = message;
+    alertElement.className = `alert-box ${type}`;
+
+    if (alertElement.hideTimeout) {
+        clearTimeout(alertElement.hideTimeout);
+    }
+
+    alertElement.style.opacity = '1';
+    alertElement.style.transform = 'translateX(0)';
+    alertElement.style.display = 'block';
+    alertElement.style.pointerEvents = 'auto';
+
+    alertElement.hideTimeout = setTimeout(() => {
+        alertElement.style.opacity = '0';
+        alertElement.style.transform = 'translateX(200px)';
+        setTimeout(() => {
+            alertElement.style.display = 'none';
+            alertElement.style.pointerEvents = 'none';
+        }, 300);
+    }, 5000);
 }
 
 // Update Navigation Links
@@ -419,17 +553,17 @@ function updateNavLinks() {
     const logoutLink = document.getElementById('logoutLink');
     const navUsername = document.getElementById('navUsername');
     const navUserAvatar = document.getElementById('navUserAvatar');
-    
+
     if (loginLink && logoutLink) {
         if (isLoggedIn) {
             loginLink.style.display = 'none';
             logoutLink.style.display = 'flex';
-            
+
             // Update username in navbar
             if (navUsername) {
                 navUsername.textContent = isLoggedIn;
             }
-            
+
             // Fetch and update user avatar
             if (navUserAvatar && userEmail) {
                 fetch('/current-user', {
@@ -437,15 +571,15 @@ function updateNavLinks() {
                         'x-email': userEmail
                     }
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.profileImage) {
-                        navUserAvatar.src = data.profileImage;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching user data:', error);
-                });
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.profileImage) {
+                            navUserAvatar.src = data.profileImage;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching user data:', error);
+                    });
             }
         } else {
             loginLink.style.display = 'flex';
@@ -460,3 +594,8 @@ window.toggleView = toggleView;
 window.filterData = filterData;
 window.openModal = openModal;
 window.closeModal = closeModal;
+window.openQrModal = openQrModal;
+window.closeQrModal = closeQrModal;
+window.downloadQrCode = downloadQrCode;
+window.copyQrCode = copyQrCode;
+window.alertBox = alertBox;
